@@ -15,7 +15,7 @@
                 <flux:navlist.group :heading="__('Platform')" class="grid">
                     <flux:navlist.item icon="clipboard" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate class="mb-2">{{ __('Dashboard') }}</flux:navlist.item>
                     <flux:navlist.item icon="home" :href="route('complexes.index')" :current="request()->routeIs('complexes*')" wire:navigate class="mb-2">ЖК и дома</flux:navlist.item>
-                    <flux:navlist.item icon="wallet" :href="route('complexes.index')" :current="request()->routeIs('projects*')" wire:navigate class="mb-2">Проекты</flux:navlist.item>
+                    <flux:navlist.item icon="wallet" :href="route('projects.index')" :current="request()->routeIs('projects*')" wire:navigate class="mb-2">Проекты</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 

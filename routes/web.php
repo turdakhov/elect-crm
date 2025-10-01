@@ -17,6 +17,8 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('complexes/create', ComplexesCreate::class)->name('complexes.create');
     Volt::route('complexes/{complex}/edit', 'complexes-edit')->name('complexes.edit');
     Volt::route('projects', 'projects-index')->name('projects.index');
+    Volt::route('projects/create', 'projects-create')->name('projects.create');
+    Volt::route('projects/{project}/edit', 'projects-edit')->name('projects.edit');
 });
 
 
