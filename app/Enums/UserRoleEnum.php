@@ -11,4 +11,5 @@ enum UserRoleEnum: string
     case Designer = 'Дизайнер';
     case Accountant = 'Бухгалтер';
     case Foreman = 'Прораб';
+    case Supervisor = 'Технадзор';
 }
