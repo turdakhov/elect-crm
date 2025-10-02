@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('client_id')->nullable()->constrained('users');
             $table->foreignId('foreman_id')->nullable()->constrained('users');
             $table->foreignId('designer_id')->nullable()->constrained('users');
+            $table->foreignId('supervisor_id')->nullable()->constrained('users');
             $table->decimal('square', 8, 2)->nullable();
             $table->unsignedBigInteger('price_per_sqm')->nullable();
             $table->unsignedBigInteger('price_per_sqm_rough')->nullable();

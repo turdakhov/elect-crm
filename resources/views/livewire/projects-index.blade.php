@@ -16,12 +16,17 @@ new class extends Component {
         ];
     }
 
+    public function delete(Project $project)
+    {
+        $project->delete();
+        session()->flash('message', 'Проект успешно удален!');
+    }
 }; ?>
 
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <flux:button variant="primary" color="green" icon="home" :href="route('complexes.create')">Добавить проект
+        <flux:button variant="primary" color="green" icon="home" :href="route('projects.create')">Добавить проект
         </flux:button>
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">
@@ -44,13 +49,13 @@ new class extends Component {
                                 ID
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                Название ЖК
+                                Имя проекта
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Клиент
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 Адрес
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                Описание
                             </th>
                             <th scope="col" class="px-6 py-3 justify-end flex">
                                 Управление
@@ -69,10 +74,10 @@ new class extends Component {
                                 {{ $project->name }}
                             </th>
                             <td class="px-6 py-4">
-                                {{ $project->address }}
+                                {{ $project->client->name }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ Str::words($project->description, 10) }}
+                                {{ Str::words($project->address, 20) }}
                             </td>
                             <td class="px-6 py-4 flex gap-2 justify-end">
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('projects.edit', $project)">
@@ -90,4 +95,3 @@ new class extends Component {
         </div>
     </div>
 </div>
-

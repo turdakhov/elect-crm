@@ -4,14 +4,13 @@
 
         <div class="relative overflow-x-auto">
             <div>
-                <form wire:submit.prevent="submit" class="space-y-6 p-6">
+                <div class="space-y-6 p-6">
                     <flux:input wire:model='name' label="Название ЖК" />
                     <flux:input wire:model='address' label="Адрес" />
                     <flux:textarea wire:model='description' label="Описание" />
-                    <flux:button variant="primary" color="green" type="submit" icon="plus">Создать</flux:button>
-                </form>
+                    <flux:button wire:click="submit" variant="primary" color="green" type="submit" icon="plus">Создать</flux:button>
+                </div>
             </div>
-
         </div>
     </div>
 </div>

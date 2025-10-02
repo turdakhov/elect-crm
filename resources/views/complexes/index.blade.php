@@ -2,11 +2,13 @@
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <flux:button variant="primary" color="green" icon="home" :href="route('complexes.create')">Добавить ЖК
         </flux:button>
+
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">
             <flux:callout.heading>{{ session('message') }}</flux:callout.heading>
         </flux:callout>
         @endif
+
         <div
             class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
 
@@ -69,4 +71,3 @@
         </div>
     </div>
 </div>
-

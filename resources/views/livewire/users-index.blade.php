@@ -13,6 +13,12 @@ new class extends Component {
             'users' => User::notAdmins()->paginate(10),
         ];
     }
+
+    public function delete(User $user)
+    {
+        $user->delete();
+        session()->flash('message', 'Пользователь успешно удален!');
+    }
 }; ?>
 
 
@@ -47,7 +53,7 @@ new class extends Component {
                                 Телефон
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                Описание
+                                Роль
                             </th>
                             <th scope="col" class="px-6 py-3 justify-end flex">
                                 Управление
@@ -66,15 +72,15 @@ new class extends Component {
                                 {{ $user->name }}
                             </th>
                             <td class="px-6 py-4">
-                                {{ $user->address }}
+                                {{ $user->phone }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ Str::words($user->description, 10) }}
+                                {{ app\Enums\UserRoleEnum::{$user->role}->value }}
                             </td>
                             <td class="px-6 py-4 flex gap-2 justify-end">
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('users.edit', $user)">
                                     Редактировать</flux:button>
-                                <flux:button size="xs" icon="trash" wire:click="delete({{ $user->id }})"
+                                <flux:button size="xs" icon="trash" wire:click="delete({{ $user }})"
                                     onclick="return confirm('Are you sure?')">Удалить
                                 </flux:button>
                             </td>
