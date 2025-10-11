@@ -5,7 +5,8 @@
     <select
         class="bg-gray-50 border {{ $errors->has($name) ? ' border-red-500' : 'border-gray-300' }} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         @if ($multiple) name="{{$name}}[]" @else name="{{ $name }}" @endif
-        wire:model='{{ $name }}'
+        wire:model.live='{{ $name }}'
+        wire:key='{{ $name }}'
         id="{{ $name }}"
         @if ($disabled) disabled @endif
         @if ($multiple) multiple="multiple" @endif>
@@ -16,7 +17,7 @@
         @if ($multiple)
         <option value="{{ $item->id }}" @if(isset($model->{$name}) && $model->{$name}->contains($item->id) || (!$model && request()->{$name} == $item->id)) selected @endif>
             @else
-        <option wire:key='{{ $item->id }}' value="{{ $item->id }}">
+        <option value="{{ $item->id }}">
             @endif
             <b>{{ $item->{$cname} }}</b>
         </option>

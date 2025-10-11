@@ -26,7 +26,7 @@ new class extends Component {
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <flux:button variant="primary" color="green" icon="home" :href="route('projects.create')">Добавить проект
+        <flux:button variant="primary" color="green" icon="wallet" :href="route('projects.create')">Добавить проект
         </flux:button>
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">

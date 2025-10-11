@@ -123,6 +123,7 @@ new class extends Component {
                         <x-forms.select name="complex_id" cname="name" label="Комплекс" :collection="$complexes" with_empty />
                         <flux:input wire:model='address' label="Адрес" />
                         <flux:input wire:model='square' label="Площадь (м²)" type="number" step="0.1" />
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-forms.select-user role="Client" name="client_id" label="Клиент" :collection="$clients" with_empty />
                             <x-forms.select-user role="Foreman" name="foreman_id" label="Прораб" :collection="$foremen" with_empty />

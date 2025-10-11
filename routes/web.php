@@ -19,6 +19,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('projects', 'projects-index')->name('projects.index');
     Volt::route('projects/create', 'projects-create')->name('projects.create');
     Volt::route('projects/{project}/edit', 'projects-edit')->name('projects.edit');
+    Volt::route('finances', 'finances-index')->name('finances.index');
 
     Volt::route('users', 'users-index')->name('users.index');
     Volt::route('users/create', 'users-create')->name('users.create');
