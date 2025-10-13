@@ -18,8 +18,9 @@ return new class extends Migration
             $table->foreignId('given_to')->nullable()->constrained('users');
             $table->foreignId('expense_type_id')->nullable()->constrained('expense_types');
             $table->date('given_at');
-            $table->text('note')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

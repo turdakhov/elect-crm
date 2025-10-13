@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('received_at');
             $table->text('note')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

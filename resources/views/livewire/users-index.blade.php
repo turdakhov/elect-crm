@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use App\Models\User;
 use Livewire\WithPagination;
+use App\Enums\UserRoleEnum;
 
 new class extends Component {
     use WithPagination;
@@ -75,7 +76,7 @@ new class extends Component {
                                 {{ $user->phone }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ app\Enums\UserRoleEnum::{$user->role}->value }}
+                                {{ UserRoleEnum::{$user->role}->value }}
                             </td>
                             <td class="px-6 py-4 flex gap-2 justify-end">
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('users.edit', $user)">

@@ -74,7 +74,7 @@ new class extends Component {
                                 {{ $project->name }}
                             </th>
                             <td class="px-6 py-4">
-                                {{ $project->client->name }}
+                                {{ $project->client?->name }}
                             </td>
                             <td class="px-6 py-4">
                                 {{ Str::words($project->address, 20) }}
