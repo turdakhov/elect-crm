@@ -19,6 +19,7 @@
                 <flux:navlist.item icon="wallet" :href="route('projects.index')" :current="request()->routeIs('projects*')" wire:navigate class="mb-2">Проекты</flux:navlist.item>
                 <flux:navlist.item icon="users" :href="route('users.index')" :current="request()->routeIs('users*')" wire:navigate class="mb-2">Пользователи</flux:navlist.item>
                 <flux:navlist.item icon="users" :href="route('finances.index')" :current="request()->routeIs('finances*')" wire:navigate class="mb-2">Финансы</flux:navlist.item>
+                <flux:navlist.item icon="chart-bar" :href="route('expense-types.index')" :current="request()->routeIs('expense-types*')" wire:navigate class="mb-2">Типы расходов</flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 

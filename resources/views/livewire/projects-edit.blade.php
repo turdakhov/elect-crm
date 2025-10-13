@@ -167,8 +167,8 @@ new class extends Component {
                                         <flux:callout.heading>{{ session('message') }}</flux:callout.heading>
                                     </flux:callout>
                                 </div>
+                                @endif
                             </div>
-                            @endif
                         </form>
                     </div>
                 </div>

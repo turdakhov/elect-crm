@@ -19,9 +19,28 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('projects', 'projects-index')->name('projects.index');
     Volt::route('projects/create', 'projects-create')->name('projects.create');
     Volt::route('projects/{project}/edit', 'projects-edit')->name('projects.edit');
+
     Volt::route('finances', 'finances-index')->name('finances.index');
 
+    Volt::route('expense-types', 'expense-types-index')->name('expense-types.index');
+    Volt::route('expense-types/create', 'expense-types-create')->name('expense-types.create');
+    Volt::route('expense-types/{expenseType}/edit', 'expense-types-edit')->name('expense-types.edit');
+
+    Volt::route('expenses', 'expenses-index')->name('expenses.index');
+    Volt::route('expenses/create', 'expenses-create')->name('expenses.create');
+    Volt::route('expenses/{expense}/edit', 'expenses-edit')->name('expenses.edit');
+
+    Volt::route('incomes', 'incomes-index')->name('incomes.index');
+    Volt::route('incomes/create', 'incomes-create')->name('incomes.create');
+    Volt::route('incomes/{income}/edit', 'incomes-edit')->name('incomes.edit');
+
+
     Volt::route('users', 'users-index')->name('users.index');
+    Volt::route('users/create', 'users-create')->name('users.create');
+    Volt::route('users/{user}/edit', 'users-edit')->name('users.edit');
+    Volt::route('expense-types', 'expense-types-index')->name('expense-types.index');
+    Volt::route('expense-types/create', 'expense-types-create')->name('expense-types.create');
+    Volt::route('expense-types/{expense_type}/edit', 'expense-types-edit')->name('expense-types.edit');
     Volt::route('users/create', 'users-create')->name('users.create');
     Volt::route('users/{user}/edit', 'users-edit')->name('users.edit');
 });

@@ -31,8 +31,6 @@ new class extends Component {
         ]);
 
         session()->flash('message', 'Пользователь успешно изменен!');
-
-        $this->redirect(route('users.index'));
     }
     //
 }; ?>
@@ -48,7 +46,18 @@ new class extends Component {
                         <flux:input wire:model='name' label="ФИО" />
                         <flux:input wire:model='phone' label="Телефон" />
                         <flux:textarea wire:model='description' label="Описание" />
-                        <flux:button variant="primary" color="green" type="submit" icon="plus">Сохранить изменения</flux:button>
+                        <div class="flex items-center gap-4">
+                            <div class="p-3">
+                                <flux:button variant="primary" color="green" type="submit" icon="plus">Сохранить изменения</flux:button>
+                            </div>
+                            @if (session()->has('message'))
+                            <div class="w-full">
+                                <flux:callout icon="bell-alert" class="mt-0">
+                                    <flux:callout.heading>{{ session('message') }}</flux:callout.heading>
+                                </flux:callout>
+                            </div>
+                            @endif
+                        </div>
                     </form>
                 </div>
 
