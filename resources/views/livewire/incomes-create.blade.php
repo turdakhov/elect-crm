@@ -60,11 +60,11 @@ new class extends Component {
                 <div class="space-y-6 p-6">
 
                     <x-forms.select name="project_id" cname="name" label="Проект" :collection="$projects" with_empty />
-                    <x-forms.select name="given_by" cname="name" label="Проект" :collection="$users" with_empty />
+                    <x-forms.select name="given_by" cname="name" label="От кого" :collection="$users" with_empty />
                     <flux:input wire:model='amount' label="Сумма" />
                     <flux:input wire:model='contract_number' label="Номер договора" />
                     <flux:textarea wire:model='description' label="Описание" />
-                    <flux:input wire:model='given_at' label="Дата выплаты" type="date" />
+                    <flux:input wire:model='received_at' label="Дата выплаты" type="date" />
                     <flux:button wire:click="submit" variant="primary" color="green" type="button" icon="plus" command="close" commandfor="dialog">Создать</flux:button>
 
                 </div>

@@ -43,6 +43,10 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('expense-types/{expense_type}/edit', 'expense-types-edit')->name('expense-types.edit');
     Volt::route('users/create', 'users-create')->name('users.create');
     Volt::route('users/{user}/edit', 'users-edit')->name('users.edit');
+
+    Volt::route('file-types', 'file-types-index')->name('file-types.index');
+    Volt::route('file-types/create', 'file-types-create')->name('file-types.create');
+    Volt::route('file-types/{file_type}/edit', 'file-types-edit')->name('file-types.edit');
 });
 
 

@@ -61,7 +61,7 @@ new class extends Component {
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
 
             <div class="relative overflow-x-auto">
-                <div>
+                <div class="space-y-6 p-6">
                     <form wire:submit.prevent="update" class="space-y-6 p-6">
                         <x-forms.select name="project_id" cname="name" label="Проект" :collection="$projects" with_empty />
                         <x-forms.select name="expense_type_id" cname="name" label="Тип расходов" :collection="$expenseTypes" with_empty />

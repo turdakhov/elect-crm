@@ -4,8 +4,15 @@ use App\Models\Income;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    public function mount()
+    {
+        // $income = Income::first();
+        // dd($income->givenBy);
+    }
+
     public function with(): array
     {
+
         return [
             'incomes' => Income::paginate(),
         ];

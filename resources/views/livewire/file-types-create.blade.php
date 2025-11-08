@@ -1,26 +1,27 @@
 <?php
 
-use App\Models\Expense;
-use App\Models\ExpenseType;
+use App\Models\FileType;
+use Faker\Core\File;
 use Livewire\Volt\Component;
 
 new class extends Component {
     public $name;
-    public $stay;
+    public $description;
 
     public function submit()
     {
         $this->validate([
-            'name' => 'required|string|max:255|unique:expense_types,name',
+            'name' => 'required|string|max:255|unique:file_types,name',
+            'description' => 'nullable|string|max:255',
         ]);
 
-        ExpenseType::create([
+        FileType::create([
             'name' => $this->name,
+            'description' => $this->description,
         ]);
 
-        session()->flash('message', 'Тип расходов успешно добавлен!');
-
-        $this->redirect(route('expense-types.index'));
+        session()->flash('message', 'Тип файла успешно создан!');
+        $this->redirectRoute('file-types.index');
     }
 }; ?>
 
@@ -36,9 +37,9 @@ new class extends Component {
 
             <div class="p-6">
                 <form wire:submit.prevent="submit" class="space-y-6">
-                    <div>
-                        <flux:input wire:model='name' label="Наименование" />
-                    </div>
+                    <flux:input wire:model='name' label="Наименование" />
+                    <flux:textarea wire:model='description' label="Описание" />
+
 
                     <div class="flex items-center gap-4">
                         <flux:button type="submit" variant="primary" color="green" icon="plus">Создать</flux:button>

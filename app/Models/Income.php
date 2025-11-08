@@ -10,4 +10,14 @@ class Income extends Model
     use SoftDeletes;
 
     protected $guarded = [];
+
+    public function givenBy()
+    {
+        return $this->belongsTo(User::class, 'given_by');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
 }
