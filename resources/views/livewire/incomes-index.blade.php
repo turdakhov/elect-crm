@@ -1,26 +1,26 @@
 <?php
 
-use App\Models\Expense;
+use App\Models\Income;
 use Livewire\Volt\Component;
 
 new class extends Component {
     public function with(): array
     {
         return [
-            'expenses' => Expense::with('expenseType')->paginate(),
+            'incomes' => Income::paginate(),
         ];
     }
 
-    public function delete(Expense $expense)
+    public function delete(Income $income)
     {
-        $expense->delete();
-        session()->flash('message', 'Расход успешно удален!');
+        $income->delete();
+        session()->flash('message', 'Доход успешно удален!');
     }
 }; ?>
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <flux:button variant="primary" color="green" icon="document-arrow-down" :href="route('expenses.create')">Добавить расход
+        <flux:button variant="primary" color="green" icon="document-arrow-down" :href="route('incomes.create')">Добавить доход
         </flux:button>
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">
@@ -30,9 +30,9 @@ new class extends Component {
         <div
             class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
 
-            @if ($expenses->hasPages())
+            @if ($incomes->hasPages())
             <div class="m-4">
-                {{ $expenses->links() }}
+                {{ $incomes->links() }}
             </div>
             @endif
             <div class="relative overflow-x-auto">
@@ -46,13 +46,10 @@ new class extends Component {
                                 Проект
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                Тип
-                            </th>
-                            <th scope="col" class="px-6 py-3">
                                 Сумма
                             </th>
                             <th scope="col" class="px-6 py-3">
-                                Кому
+                                От кого
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 Дата
@@ -63,32 +60,29 @@ new class extends Component {
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($expenses as $expense)
-                        <tr wire:key='{{ $expense->id }}'
+                        @foreach ($incomes as $income)
+                        <tr wire:key='{{ $income->id }}'
                             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                             <td class="px-6 py-4">
-                                {{ $expense->id }}
+                                {{ $income->id }}
                             </td>
                             <th scope="row"
                                 class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $expense->project->name }}
+                                {{ $income->project->name }}
                             </th>
                             <td class="px-6 py-4">
-                                {{ $expense->amount }}
+                                {{ $income->amount }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ $expense->expenseType->name }}
+                                {{ $income->givenBy->name }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ $expense->givenTo->name }}
-                            </td>
-                            <td class="px-6 py-4">
-                                {{ $expense->given_at }}
+                                {{ $income->received_at }}
                             </td>
                             <td class="px-6 py-4 flex gap-2 justify-end">
-                                <flux:button size="xs" color="blue" icon="pencil" :href="route('expenses.edit', $expense)">
+                                <flux:button size="xs" color="blue" icon="pencil" :href="route('incomes.edit', $income)">
                                     Редактировать</flux:button>
-                                <flux:button size="xs" icon="trash" wire:click="delete({{ $expense }})"
+                                <flux:button size="xs" icon="trash" wire:click="delete({{ $income }})"
                                     onclick="return confirm('Are you sure?')">Удалить
                                 </flux:button>
                             </td>
@@ -97,7 +91,6 @@ new class extends Component {
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
 </div>

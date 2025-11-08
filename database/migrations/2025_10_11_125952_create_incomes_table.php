@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('given_by')->nullable()->constrained('users');
             $table->string('contract_number')->nullable();
             $table->date('received_at');
-            $table->text('note')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

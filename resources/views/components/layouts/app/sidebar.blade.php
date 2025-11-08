@@ -21,6 +21,7 @@
                 <flux:navlist.item icon="banknotes" :href="route('finances.index')" :current="request()->routeIs('finances*')" wire:navigate class="mb-2">Финансы</flux:navlist.item>
                 <flux:navlist.item icon="list-bullet" :href="route('expense-types.index')" :current="request()->routeIs('expense-types*')" wire:navigate class="mb-2">Типы расходов</flux:navlist.item>
                 <flux:navlist.item icon="document-arrow-down" :href="route('expenses.index')" :current="request()->routeIs('expenses*')" wire:navigate class="mb-2">Расходы</flux:navlist.item>
+                <flux:navlist.item icon="document-arrow-up" :href="route('incomes.index')" :current="request()->routeIs('incomes*')" wire:navigate class="mb-2">Доходы</flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 
