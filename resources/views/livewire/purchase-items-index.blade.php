@@ -9,7 +9,7 @@ new class extends Component {
 
     public function mount(Purchase $purchase): void
     {
-        $this->purchase = $purchase;
+        $this->purchase = $purchase->loadMissing('project');
     }
 
     public function with(): array
@@ -36,7 +36,7 @@ new class extends Component {
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <flux:heading level="h3" class="text-2xl md:text-3xl font-semibold">Позиции закупа #{{ $purchase->id }}</flux:heading>
+        <flux:heading level="h3" class="text-2xl md:text-3xl font-semibold">Позиции закупа #{{ $purchase->id }} — {{ $purchase->project?->name }}</flux:heading>
         <div class="flex items-center gap-4">
             <flux:button variant="filled" icon="arrow-left" :href="route('projects.purchases.index', $purchase->project)">Назад к закупам</flux:button>
             <flux:button variant="primary" color="green" icon="plus" :href="route('purchases.items.create', $purchase)">Добавить позицию</flux:button>
