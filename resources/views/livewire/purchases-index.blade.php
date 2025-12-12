@@ -50,6 +50,7 @@ new class extends Component {
                             <th class="px-6 py-3">Дата</th>
                             <th class="px-6 py-3">Пользователь</th>
                             <th class="px-6 py-3">Комментарий</th>
+                            <th class="px-6 py-3">Позиции</th>
                             <th class="px-6 py-3 text-right">Управление</th>
                         </tr>
                     </thead>
@@ -59,6 +60,9 @@ new class extends Component {
                             <td class="px-6 py-4">{{ $purchase->purchased_at }}</td>
                             <td class="px-6 py-4">{{ $purchase->user?->name }}</td>
                             <td class="px-6 py-4">{{ $purchase->comment }}</td>
+                            <td class="px-6 py-4">
+                                <flux:button size="xs" color="purple" icon="list-bullet" :href="route('purchases.items.index', $purchase)">Позиции</flux:button>
+                            </td>
                             <td class="px-6 py-4 text-right flex justify-end gap-2">
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('purchases.edit', $purchase)">Редактировать</flux:button>
                                 <flux:button size="xs" color="red" icon="trash" wire:click="delete({{ $purchase->id }})" confirm="Вы уверены, что хотите удалить этот закуп?">Удалить</flux:button>

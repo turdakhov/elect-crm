@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,7 +12,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed in dependency order: Users -> FileTypes -> ExpenseTypes -> Complexes -> Projects -> Products -> Purchases -> Incomes/Expenses
+        // Seed in dependency order: Users -> FileTypes -> ExpenseTypes -> Complexes -> Projects -> Products -> Purchases -> PurchaseItems -> Incomes/Expenses
         $this->call([
             UserSeeder::class,
             FileTypeSeeder::class,
@@ -22,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ProjectSeeder::class,
             ProductSeeder::class,
             PurchaseSeeder::class,
+            PurchaseItemSeeder::class,
             IncomeSeeder::class,
             ExpenseSeeder::class,
         ]);

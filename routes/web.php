@@ -23,6 +23,9 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('projects/{project}/purchases', 'purchases-index')->name('projects.purchases.index');
     Volt::route('projects/{project}/purchases/create', 'purchases-create')->name('projects.purchases.create');
     Volt::route('purchases/{purchase}/edit', 'purchases-edit')->name('purchases.edit');
+    Volt::route('purchases/{purchase}/items', 'purchase-items-index')->name('purchases.items.index');
+    Volt::route('purchases/{purchase}/items/create', 'purchase-items-create')->name('purchases.items.create');
+    Volt::route('purchase-items/{purchaseItem}/edit', 'purchase-items-edit')->name('purchase-items.edit');
 
     Volt::route('finances', 'finances-index')->name('finances.index');
 
