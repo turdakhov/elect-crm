@@ -2,16 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Models\Income;
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
-class ProjectSeeder extends Seeder
+class IncomeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Project::factory()->count(5)->create();
+        Income::factory()->count(20)->create();
     }
 }

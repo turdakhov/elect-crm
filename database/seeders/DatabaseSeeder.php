@@ -13,15 +13,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed in dependency order: Users -> FileTypes -> ExpenseTypes -> Complexes -> Projects -> Products -> Purchases -> Incomes/Expenses
         $this->call([
+            UserSeeder::class,
             FileTypeSeeder::class,
-        ]);
-
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            ExpenseTypeSeeder::class,
+            ComplexSeeder::class,
+            ProjectSeeder::class,
+            ProductSeeder::class,
+            PurchaseSeeder::class,
+            IncomeSeeder::class,
+            ExpenseSeeder::class,
         ]);
     }
 }
