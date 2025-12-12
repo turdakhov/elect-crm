@@ -13,6 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            FileTypeSeeder::class,
+        ]);
+
         // User::factory(10)->create();
 
         User::factory()->create([
