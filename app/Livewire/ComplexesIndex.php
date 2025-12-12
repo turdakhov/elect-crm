@@ -16,6 +16,7 @@ class ComplexesIndex extends Component
     public function render()
     {
         $complexes = Complex::orderByDesc('id')->paginate(10);
+
         return view('complexes.index', compact('complexes'));
     }
 }

@@ -8,7 +8,9 @@ use Livewire\Component;
 class ComplexesCreate extends Component
 {
     public $name;
+
     public $address;
+
     public $description;
 
     public function submit()
