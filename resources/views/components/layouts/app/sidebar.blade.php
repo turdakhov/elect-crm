@@ -20,8 +20,6 @@
                 <flux:navlist.item icon="users" :href="route('users.index')" :current="request()->routeIs('users*')" wire:navigate class="mb-2">Пользователи</flux:navlist.item>
                 <flux:navlist.item icon="banknotes" :href="route('finances.index')" :current="request()->routeIs('finances*')" wire:navigate class="mb-2">Финансы</flux:navlist.item>
                 <flux:navlist.item icon="list-bullet" :href="route('expense-types.index')" :current="request()->routeIs('expense-types*')" wire:navigate class="mb-2">Типы расходов</flux:navlist.item>
-                <flux:navlist.item icon="document-arrow-down" :href="route('expenses.index')" :current="request()->routeIs('expenses*')" wire:navigate class="mb-2">Расходы</flux:navlist.item>
-                <flux:navlist.item icon="document-arrow-up" :href="route('incomes.index')" :current="request()->routeIs('incomes*')" wire:navigate class="mb-2">Доходы</flux:navlist.item>
                 <flux:navlist.item icon="folder" :href="route('file-types.index')" :current="request()->routeIs('file-types*')" wire:navigate class="mb-2">Типы файлов</flux:navlist.item>
                 <flux:navlist.item icon="shopping-bag" :href="route('products.index')" :current="request()->routeIs('products*')" wire:navigate class="mb-2">Товары</flux:navlist.item>
             </flux:navlist.group>
