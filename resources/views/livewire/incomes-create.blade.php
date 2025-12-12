@@ -13,6 +13,13 @@ new class extends Component {
     public $received_at;
     public $contract_number;
 
+    public function mount(?Project $project = null): void
+    {
+        if ($project) {
+            $this->project_id = $project->id;
+        }
+    }
+
     public function with()
     {
         /** @disregard P1005, P1006 */
@@ -48,7 +55,7 @@ new class extends Component {
 
         session()->flash('success', 'Доход успешно добавлен!');
 
-        $this->redirectRoute('incomes.index');
+        $this->redirectRoute($this->project_id ? 'projects.incomes.index' : 'incomes.index', $this->project_id ? $this->project_id : null);
     }
 }; ?>
 
@@ -65,7 +72,7 @@ new class extends Component {
                     <flux:input wire:model='amount' label="Сумма" />
                     <flux:input wire:model='contract_number' label="Номер договора" />
                     <flux:textarea wire:model='description' label="Описание" />
-                    <flux:input wire:model='received_at' label="Дата выплаты" type="date" />
+                    <flux:input wire:model='received_at' label="Дата выплаты" type="date" class="max-w-xs" />
                     <flux:button wire:click="submit" variant="primary" color="green" type="button" icon="plus" command="close" commandfor="dialog">Создать</flux:button>
 
                 </div>

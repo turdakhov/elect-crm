@@ -1,20 +1,26 @@
 <?php
 
 use App\Models\Income;
+use App\Models\Project;
 use Livewire\Volt\Component;
 
 new class extends Component {
-    public function mount()
+    public ?Project $project = null;
+
+    public function mount(?Project $project = null): void
     {
-        // $income = Income::first();
-        // dd($income->givenBy);
+        $this->project = $project;
     }
 
     public function with(): array
     {
+        $query = Income::query();
+        if ($this->project) {
+            $query->where('project_id', $this->project->id);
+        }
 
         return [
-            'incomes' => Income::paginate(),
+            'incomes' => $query->paginate(),
         ];
     }
 
@@ -27,7 +33,10 @@ new class extends Component {
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <flux:button variant="primary" color="green" icon="document-arrow-down" :href="route('incomes.create')">Добавить доход
+        @if ($project)
+        <flux:heading level="h3" class="text-2xl md:text-3xl font-semibold">Доходы проекта {{ $project->name }}</flux:heading>
+        @endif
+        <flux:button variant="primary" color="green" icon="document-arrow-down" :href="$project ? route('projects.incomes.create', $project) : route('incomes.create')">Добавить доход
         </flux:button>
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">
@@ -49,9 +58,7 @@ new class extends Component {
                             <th scope="col" class="px-6 py-3">
                                 ID
                             </th>
-                            <th scope="col" class="px-6 py-3">
-                                Проект
-                            </th>
+
                             <th scope="col" class="px-6 py-3">
                                 Сумма
                             </th>
@@ -73,12 +80,9 @@ new class extends Component {
                             <td class="px-6 py-4">
                                 {{ $income->id }}
                             </td>
-                            <th scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $income->project->name }}
-                            </th>
+
                             <td class="px-6 py-4">
-                                {{ $income->amount }}
+                                {{ number_format($income->amount, 0, ',', ' ') }}
                             </td>
                             <td class="px-6 py-4">
                                 {{ $income->givenBy->name }}

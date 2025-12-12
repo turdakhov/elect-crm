@@ -49,7 +49,7 @@ new class extends Component {
                         <flux:input wire:model='amount' label="Сумма" />
                         <flux:input wire:model='contract_number' label="Номер договора" />
                         <flux:textarea wire:model='description' label="Описание" />
-                        <flux:input wire:model='received_at' label="Дата выплаты" type="date" />
+                        <flux:input wire:model='received_at' label="Дата выплаты" type="date" class="max-w-xs" />
                         <div class="flex items-center gap-4">
                             <div class="p-3">
                                 <flux:button type="submit" variant="primary" color="green" icon="plus">Обновить</flux:button>
