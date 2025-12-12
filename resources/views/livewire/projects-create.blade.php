@@ -135,8 +135,8 @@ new class extends Component {
                             <flux:input wire:model='total_price' label="Общая цена" type="number" step="1" />
                         </div>
                         <flux:textarea wire:model='description' label="Описание" />
-                        <flux:input wire:model='start_date' label="Дата начала" type="date" />
-                        <flux:input wire:model='end_date' label="Дата окончания" type="date" />
+                        <flux:input wire:model='start_date' label="Дата начала" type="date" class="max-w-xs" />
+                        <flux:input wire:model='end_date' label="Дата окончания" type="date" class="max-w-xs" />
                         <x-forms.select-enum name="status" label="Статус" :enum="$statuses" with_empty />
                         <flux:button variant="primary" color="green" type="submit" icon="plus">Создать</flux:button>
                     </form>
