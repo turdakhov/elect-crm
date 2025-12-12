@@ -15,6 +15,7 @@ new class extends Component {
 
     public function with()
     {
+        /** @disregard P1005, P1006 */
         return [
             'projects' => Project::all(),
             'users' => User::clients()->orWhere(function ($query) {
