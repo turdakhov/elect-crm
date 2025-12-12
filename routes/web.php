@@ -34,7 +34,6 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('incomes/create', 'incomes-create')->name('incomes.create');
     Volt::route('incomes/{income}/edit', 'incomes-edit')->name('incomes.edit');
 
-
     Volt::route('users', 'users-index')->name('users.index');
     Volt::route('users/create', 'users-create')->name('users.create');
     Volt::route('users/{user}/edit', 'users-edit')->name('users.edit');
@@ -47,8 +46,11 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('file-types', 'file-types-index')->name('file-types.index');
     Volt::route('file-types/create', 'file-types-create')->name('file-types.create');
     Volt::route('file-types/{file_type}/edit', 'file-types-edit')->name('file-types.edit');
-});
 
+    Volt::route('products', 'products-index')->name('products.index');
+    Volt::route('products/create', 'products-create')->name('products.create');
+    Volt::route('products/{product}/edit', 'products-edit')->name('products.edit');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -69,4 +71,4 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
