@@ -19,6 +19,10 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('projects', 'projects-index')->name('projects.index');
     Volt::route('projects/create', 'projects-create')->name('projects.create');
     Volt::route('projects/{project}/edit', 'projects-edit')->name('projects.edit');
+    // Purchases nested under projects
+    Volt::route('projects/{project}/purchases', 'purchases-index')->name('projects.purchases.index');
+    Volt::route('projects/{project}/purchases/create', 'purchases-create')->name('projects.purchases.create');
+    Volt::route('purchases/{purchase}/edit', 'purchases-edit')->name('purchases.edit');
 
     Volt::route('finances', 'finances-index')->name('finances.index');
 
@@ -26,10 +30,14 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('expense-types/create', 'expense-types-create')->name('expense-types.create');
     Volt::route('expense-types/{expenseType}/edit', 'expense-types-edit')->name('expense-types.edit');
 
+    Volt::route('projects/{project}/expenses', 'expenses-index')->name('projects.expenses.index');
+    Volt::route('projects/{project}/expenses/create', 'expenses-create')->name('projects.expenses.create');
     Volt::route('expenses', 'expenses-index')->name('expenses.index');
     Volt::route('expenses/create', 'expenses-create')->name('expenses.create');
     Volt::route('expenses/{expense}/edit', 'expenses-edit')->name('expenses.edit');
 
+    Volt::route('projects/{project}/incomes', 'incomes-index')->name('projects.incomes.index');
+    Volt::route('projects/{project}/incomes/create', 'incomes-create')->name('projects.incomes.create');
     Volt::route('incomes', 'incomes-index')->name('incomes.index');
     Volt::route('incomes/create', 'incomes-create')->name('incomes.create');
     Volt::route('incomes/{income}/edit', 'incomes-edit')->name('incomes.edit');
