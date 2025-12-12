@@ -68,7 +68,7 @@ new class extends Component {
                         <x-forms.select name="given_to" cname="name" label="Кому" :collection="$users" with_empty />
                         <flux:input wire:model='amount' label="Сумма" />
                         <flux:textarea wire:model='description' label="Описание" />
-                        <flux:input wire:model='given_at' label="Дата выплаты" type="date" />
+                        <flux:input wire:model='given_at' label="Дата выплаты" type="date" class="max-w-xs" />
                         <div class="flex items-center gap-4">
                             <div class="p-3">
                                 <flux:button variant="primary" color="green" type="submit" icon="plus">Сохранить изменения</flux:button>

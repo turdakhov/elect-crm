@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Expense;
+use App\Models\Project;
 use Livewire\Volt\Component;
 
 new class extends Component {
@@ -11,6 +12,13 @@ new class extends Component {
     public $description;
     public $project_id;
     public $showModal = false;
+
+    public function mount(?Project $project = null): void
+    {
+        if ($project) {
+            $this->project_id = $project->id;
+        }
+    }
 
     public function submit()
     {
@@ -34,7 +42,7 @@ new class extends Component {
 
         session()->flash('message', 'Расход успешно создан!');
 
-        $this->redirectRoute('expenses.index');
+        $this->redirectRoute($this->project_id ? 'projects.expenses.index' : 'expenses.index', $this->project_id ? $this->project_id : null);
     }
 
     public function with(): array
@@ -66,7 +74,7 @@ new class extends Component {
                         <x-forms.select name="given_to" cname="name" label="Кому" :collection="$users" with_empty />
                         <flux:input wire:model='amount' label="Сумма" />
                         <flux:textarea wire:model='description' label="Описание" />
-                        <flux:input wire:model='given_at' label="Дата выплаты" type="date" />
+                        <flux:input wire:model='given_at' label="Дата выплаты" type="date" class="max-w-xs" />
                         <flux:button variant="primary" color="green" type="submit" icon="plus">Создать</flux:button>
                     </form>
                 </div>

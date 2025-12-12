@@ -1,13 +1,25 @@
 <?php
 
 use App\Models\Expense;
+use App\Models\Project;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    public ?Project $project = null;
+
+    public function mount(?Project $project = null): void
+    {
+        $this->project = $project;
+    }
+
     public function with(): array
     {
+        $query = Expense::query()->with('expenseType');
+        if ($this->project) {
+            $query->where('project_id', $this->project->id);
+        }
         return [
-            'expenses' => Expense::with('expenseType')->paginate(),
+            'expenses' => $query->paginate(),
         ];
     }
 
@@ -20,7 +32,10 @@ new class extends Component {
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <flux:button variant="primary" color="green" icon="document-arrow-down" :href="route('expenses.create')">Добавить расход
+        @if ($project)
+        <flux:heading level="h3" class="text-2xl md:text-3xl font-semibold">Расходы проекта {{ $project->name }}</flux:heading>
+        @endif
+        <flux:button variant="primary" color="green" icon="document-arrow-down" :href="$project ? route('projects.expenses.create', $project) : route('expenses.create')">Добавить расход
         </flux:button>
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">
@@ -42,14 +57,12 @@ new class extends Component {
                             <th scope="col" class="px-6 py-3">
                                 ID
                             </th>
+
                             <th scope="col" class="px-6 py-3">
-                                Проект
+                                Сумма
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 Тип
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                Сумма
                             </th>
                             <th scope="col" class="px-6 py-3">
                                 Кому
@@ -69,12 +82,9 @@ new class extends Component {
                             <td class="px-6 py-4">
                                 {{ $expense->id }}
                             </td>
-                            <th scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ $expense->project->name }}
-                            </th>
+
                             <td class="px-6 py-4">
-                                {{ $expense->amount }}
+                                {{ number_format($expense->amount, 0, ',', ' ') }}
                             </td>
                             <td class="px-6 py-4">
                                 {{ $expense->expenseType->name }}
