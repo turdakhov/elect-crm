@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Complex;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ComplexFactory extends Factory
 {
+    protected $model = Complex::class;
     /**
      * Define the model's default state.
      *
@@ -17,7 +19,8 @@ class ComplexFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->company(),
+            'address' => $this->faker->address(),
         ];
     }
 }
