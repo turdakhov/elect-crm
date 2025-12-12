@@ -48,6 +48,7 @@ new class extends Component {
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+        <flux:heading level="h3" class="text-2xl md:text-3xl font-semibold">Создать закуп для проекта {{ $project->name }}</flux:heading>
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <div class="relative overflow-x-auto">
                 <div class="space-y-6 p-6">
