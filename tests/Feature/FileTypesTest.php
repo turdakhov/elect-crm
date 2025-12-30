@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
 use App\Models\FileType;
+use App\Models\User;
 use Livewire\Volt\Volt;
 
 it('renders file types index', function () {

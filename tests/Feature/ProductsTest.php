@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\User;
-use App\Models\Product;
 use App\Models\FileType;
-use Livewire\Volt\Volt;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Volt\Volt;
 
 it('renders products index', function () {
     $user = User::factory()->create();
