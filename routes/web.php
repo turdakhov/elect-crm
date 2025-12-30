@@ -19,6 +19,15 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('projects', 'projects-index')->name('projects.index');
     Volt::route('projects/create', 'projects-create')->name('projects.create');
     Volt::route('projects/{project}/edit', 'projects-edit')->name('projects.edit');
+    // Project products summary
+    Volt::route('projects/{project}/products-summary', 'project-products-summary')->name('projects.products-summary');
+    // Project product sets nested under projects
+    Volt::route('projects/{project}/product-set', 'project-product-set-index')->name('projects.product-set.index');
+    Volt::route('projects/{project}/product-set/create', 'project-product-set-create')->name('projects.product-set.create');
+    Volt::route('project-product-set/{projectProductSet}/edit', 'project-product-set-edit')->name('project-product-set.edit');
+    Volt::route('project-product-set/{projectProductSet}/items', 'project-product-set-items-index')->name('project-product-set.items.index');
+    Volt::route('project-product-set/{projectProductSet}/items/create', 'project-product-set-items-create')->name('project-product-set.items.create');
+    Volt::route('project-product-set-items/{projectProductSetItem}/edit', 'project-product-set-items-edit')->name('project-product-set-items.edit');
     // Purchases nested under projects
     Volt::route('projects/{project}/purchases', 'purchases-index')->name('projects.purchases.index');
     Volt::route('projects/{project}/purchases/create', 'purchases-create')->name('projects.purchases.create');
