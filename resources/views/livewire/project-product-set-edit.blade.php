@@ -31,7 +31,7 @@ new class extends Component {
             'comment' => $this->comment,
         ]);
 
-        session()->flash('message', 'Смета успешно обновлена!');
+        return redirect()->route('projects.product-set.index', $this->projectProductSet->project)->with('message', 'Смета успешно обновлена!');
     }
 }; ?>
 
