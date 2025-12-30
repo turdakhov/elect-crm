@@ -35,7 +35,7 @@ new class extends Component {
     }
 }; ?>
 
-<div>
+<div x-data="{ selectedImage: null, selectedName: null }">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="flex items-center justify-between gap-4">
             <flux:button variant="primary" color="green" icon="plus" :href="route('products.create')">
@@ -64,6 +64,7 @@ new class extends Component {
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th scope="col" class="px-6 py-3">ID</th>
+                            <th scope="col" class="px-6 py-3 text-center">Фото</th>
                             <th scope="col" class="px-6 py-3">Название</th>
                             <th scope="col" class="px-6 py-3">Описание</th>
                             <th scope="col" class="px-6 py-3">Цена</th>
@@ -77,6 +78,21 @@ new class extends Component {
                         <tr wire:key='{{ $product->id }}'
                             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                             <td class="px-6 py-4">{{ $product->id }}</td>
+                            <td class="px-6 py-4 text-center">
+                                @if ($product->file && $product->file->path)
+                                <button 
+                                    type="button"
+                                    @click="selectedImage = '{{ Storage::url($product->file->path) }}'; selectedName = '{{ $product->name }}'"
+                                    class="cursor-pointer hover:opacity-75 transition-opacity"
+                                >
+                                    <img src="{{ Storage::url($product->file->path) }}"
+                                        alt="{{ $product->name }}"
+                                        style="max-width: 100px; max-height: 100px; width: auto; height: auto; object-fit: contain;">
+                                </button>
+                                @else
+                                <span class="text-gray-400">Нет фото</span>
+                                @endif
+                            </td>
                             <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {{ $product->name }}
                             </th>
@@ -104,4 +120,21 @@ new class extends Component {
             </div>
         </div>
     </div>
+
+    <!-- Image Modal -->
+    <template x-if="selectedImage">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click="selectedImage = null">
+            <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-auto" @click.stop>
+                <div class="flex flex-col items-center gap-4">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white" x-text="selectedName"></h2>
+                    <img :src="selectedImage" :alt="selectedName"
+                         style="max-width: 100%; max-height: 60vh; width: auto; height: auto; object-fit: contain;">
+                    <button type="button" @click="selectedImage = null"
+                            class="px-4 py-2 bg-gray-200 dark:bg-neutral-700 rounded hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
