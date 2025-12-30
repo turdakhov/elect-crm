@@ -7,10 +7,24 @@ use Livewire\WithPagination;
 new class extends Component {
     use WithPagination;
 
+    public string $search = '';
+
+    #[\Livewire\Attributes\On('search')]
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
     public function with(): array
     {
+        $query = Product::query();
+
+        if ($this->search) {
+            $query->where('name', 'like', '%' . $this->search . '%');
+        }
+
         return [
-            'products' => Product::paginate(15),
+            'products' => $query->paginate(15),
         ];
     }
 
@@ -23,9 +37,14 @@ new class extends Component {
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <flux:button variant="primary" color="green" icon="plus" :href="route('products.create')">
-            Добавить товар
-        </flux:button>
+        <div class="flex items-center justify-between gap-4">
+            <flux:button variant="primary" color="green" icon="plus" :href="route('products.create')">
+                Добавить товар
+            </flux:button>
+            <div class="flex-1 max-w-md">
+                <flux:input wire:model.live="search" placeholder="Поиск товара..." icon="magnifying-glass" />
+            </div>
+        </div>
 
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">

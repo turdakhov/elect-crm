@@ -83,6 +83,10 @@ new class extends Component {
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('projects.edit', $project)">
                                     Редактировать</flux:button>
 
+                                <flux:button size="xs" color="teal" icon="chart-bar" :href="route('projects.products-summary', $project)">Сводка</flux:button>
+
+                                <flux:button size="xs" color="amber" icon="shopping-bag" :href="route('projects.product-set.index', $project)">Сметы</flux:button>
+
                                 <flux:button size="xs" color="purple" icon="list-bullet" :href="route('projects.purchases.index', $project)">Закупы</flux:button>
                                 <flux:button size="xs" color="emerald" icon="document-arrow-up" :href="route('projects.incomes.index', $project)">Доходы</flux:button>
 
