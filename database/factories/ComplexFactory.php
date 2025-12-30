@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ComplexFactory extends Factory
 {
     protected $model = Complex::class;
+
     /**
      * Define the model's default state.
      *

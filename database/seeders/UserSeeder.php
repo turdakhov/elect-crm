@@ -34,9 +34,9 @@ class UserSeeder extends Seeder
 
             for ($i = 1; $i <= $count; $i++) {
                 User::firstOrCreate(
-                    ['email' => strtolower($role->name) . $i . '@example.com'],
+                    ['email' => strtolower($role->name).$i.'@example.com'],
                     [
-                        'name' => $role->name . ' ' . $i,
+                        'name' => $role->name.' '.$i,
                         'password' => Hash::make('password'),
                         'email_verified_at' => now(),
                         'role' => $role->name,
