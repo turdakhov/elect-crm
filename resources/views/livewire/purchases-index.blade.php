@@ -66,7 +66,7 @@ new class extends Component {
                         @foreach ($purchases as $purchase)
                         <tr wire:key="purchase-{{ $purchase->id }}"
                             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                            <td class="px-6 py-4">{{ $purchase->purchased_at->format('d.m.Y') }}</td>
+                            <td class="px-6 py-4">{{ \Carbon\Carbon::parse($purchase->purchased_at)->format('d.m.Y') }}</td>
                             <td class="px-6 py-4">{{ $purchase->user?->name }}</td>
                             <td class="px-6 py-4">{{ Str::limit($purchase->comment, 50) }}</td>
                             <td class="px-6 py-4 text-center">
