@@ -43,6 +43,11 @@ new class extends Component {
         ]);
 
         session()->flash('message', 'Расход успешно обновлен.');
+        
+        if ($this->expense->project_id) {
+            return redirect()->route('projects.expenses.index', $this->expense->project_id);
+        }
+        return redirect()->route('expenses.index');
     }
 
     public function with()
@@ -62,6 +67,10 @@ new class extends Component {
 
             <div class="relative overflow-x-auto">
                 <div class="space-y-6 p-6">
+                    <div>
+                        <h1 class="text-2xl font-bold">Редактировать расход</h1>
+                    </div>
+
                     <form wire:submit.prevent="update" class="space-y-6 p-6">
                         <x-forms.select name="project_id" cname="name" label="Проект" :collection="$projects" with_empty />
                         <x-forms.select name="expense_type_id" cname="name" label="Тип расходов" :collection="$expenseTypes" with_empty />
@@ -70,17 +79,20 @@ new class extends Component {
                         <flux:textarea wire:model='description' label="Описание" />
                         <flux:input wire:model='given_at' label="Дата выплаты" type="date" class="max-w-xs" />
                         <div class="flex items-center gap-4">
+                            @if ($expense->project_id)
+                            <flux:button variant="filled" icon="arrow-left" :href="route('projects.expenses.index', $expense->project_id)">Назад</flux:button>
+                            @else
+                            <flux:button variant="filled" icon="arrow-left" :href="route('expenses.index')">Назад</flux:button>
+                            @endif
                             <div class="p-3">
                                 <flux:button variant="primary" color="green" type="submit" icon="plus">Сохранить изменения</flux:button>
                             </div>
-                            @if (session()->has('message'))
-                            <div class="w-full">
-                                <flux:callout icon="bell-alert" class="mt-0">
-                                    <flux:callout.heading>{{ session('message') }}</flux:callout.heading>
-                                </flux:callout>
-                            </div>
-                            @endif
                         </div>
+                        @if (session()->has('message'))
+                        <flux:callout icon="bell-alert">
+                            <flux:callout.heading>{{ session('message') }}</flux:callout.heading>
+                        </flux:callout>
+                        @endif
                     </form>
                 </div>
 

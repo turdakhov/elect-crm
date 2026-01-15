@@ -36,6 +36,11 @@ new class extends Component {
         ]);
 
         session()->flash('message', 'Доход успешно обновлен.');
+        
+        if ($this->income->project_id) {
+            return redirect()->route('projects.incomes.index', $this->income->project_id);
+        }
+        return redirect()->route('incomes.index');
     }
 }; ?>
 
@@ -44,6 +49,9 @@ new class extends Component {
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <div class="relative overflow-x-auto">
                 <div class="space-y-6 p-6">
+                    <div>
+                        <h1 class="text-2xl font-bold">Редактировать доход</h1>
+                    </div>
 
                     <form wire:submit.prevent="submit" class="space-y-6 p-6">
                         <flux:input wire:model='amount' label="Сумма" />
@@ -51,17 +59,20 @@ new class extends Component {
                         <flux:textarea wire:model='description' label="Описание" />
                         <flux:input wire:model='received_at' label="Дата выплаты" type="date" class="max-w-xs" />
                         <div class="flex items-center gap-4">
+                            @if ($income->project_id)
+                            <flux:button variant="filled" icon="arrow-left" :href="route('projects.incomes.index', $income->project_id)">Назад</flux:button>
+                            @else
+                            <flux:button variant="filled" icon="arrow-left" :href="route('incomes.index')">Назад</flux:button>
+                            @endif
                             <div class="p-3">
                                 <flux:button type="submit" variant="primary" color="green" icon="plus">Обновить</flux:button>
                             </div>
-                            @if (session()->has('message'))
-                            <div class="w-full" class="mt-0">
-                                <flux:callout icon="bell-alert" class="mt-0">
-                                    <flux:callout.heading>{{ session('message') }}</flux:callout.heading>
-                                </flux:callout>
-                            </div>
-                            @endif
                         </div>
+                        @if (session()->has('message'))
+                        <flux:callout icon="bell-alert">
+                            <flux:callout.heading>{{ session('message') }}</flux:callout.heading>
+                        </flux:callout>
+                        @endif
                     </form>
                 </div>
             </div>
