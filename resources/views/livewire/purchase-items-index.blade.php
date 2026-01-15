@@ -93,9 +93,9 @@ new class extends Component {
                                 <span class="text-gray-400">Нет фото</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">{{ $purchaseItem->quantity }}</td>
+                            <td class="px-6 py-4">{{ $purchaseItem->quantity }} {{ $purchaseItem->product->unit ?? '' }}</td>
                             <td class="px-6 py-4">{{ number_format($purchaseItem->unit_price, 0, ',', ' ') }} ₽</td>
-                            <td class="px-6 py-4">{{ number_format($purchaseItem->total_price, 0, ',', ' ') }} ₽</td>
+                            <td class="px-6 py-4">{{ number_format($purchaseItem->total_price, 0, ',', ' ') }} ₽ {{ $purchaseItem->product->unit ? '(' . $purchaseItem->quantity . ' ' . $purchaseItem->product->unit . ')' : '' }}</td>
                             <td class="px-6 py-4 flex gap-2 justify-end">
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('purchase-items.edit', $purchaseItem)">
                                     Редактировать

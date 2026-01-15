@@ -17,7 +17,7 @@ new class extends Component {
 
     public function with(): array
     {
-        $query = Product::query();
+        $query = Product::query()->latest();
 
         if ($this->search) {
             $query->where('name', 'like', '%' . $this->search . '%');
@@ -77,8 +77,8 @@ new class extends Component {
                         @foreach ($products as $product)
                         <tr wire:key='{{ $product->id }}'
                             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                            <td class="px-6 py-4">{{ $product->id }}</td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-6 py-4 align-middle">{{ $product->id }}</td>
+                            <td class="px-6 py-4 text-center align-middle">
                                 @if ($product->file && $product->file->path)
                                 <button 
                                     type="button"
@@ -93,25 +93,27 @@ new class extends Component {
                                 <span class="text-gray-400">Нет фото</span>
                                 @endif
                             </td>
-                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white align-middle">
                                 {{ $product->name }}
                             </th>
-                            <td class="px-6 py-4">{{ Str::limit($product->description, 50) }}</td>
-                            <td class="px-6 py-4">{{ number_format($product->approximate_price, 2) }}</td>
-                            <td class="px-6 py-4">{{ $product->unit }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 align-middle">{{ Str::limit($product->description, 50) }}</td>
+                            <td class="px-6 py-4 align-middle">{{ number_format($product->approximate_price, 2) }}</td>
+                            <td class="px-6 py-4 align-middle">{{ $product->unit }}</td>
+                            <td class="px-6 py-4 align-middle">
                                 @if($product->url)
                                 <a href="{{ $product->url }}" target="_blank" class="text-blue-600 hover:underline">Ссылка</a>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 flex gap-2 justify-end">
-                                <flux:button size="xs" color="blue" icon="pencil" :href="route('products.edit', $product)">
-                                    Редактировать
-                                </flux:button>
-                                <flux:button size="xs" icon="trash" wire:click="delete({{ $product }})"
-                                    onclick="return confirm('Вы уверены?')">
-                                    Удалить
-                                </flux:button>
+                            <td class="px-6 py-4 align-middle">
+                                <div class="flex gap-2 justify-end">
+                                    <flux:button size="xs" color="blue" icon="pencil" :href="route('products.edit', $product)">
+                                        Редактировать
+                                    </flux:button>
+                                    <flux:button size="xs" icon="trash" wire:click="delete({{ $product }})"
+                                        onclick="return confirm('Вы уверены?')">
+                                        Удалить
+                                    </flux:button>
+                                </div>
                             </td>
                         </tr>
                         @endforeach

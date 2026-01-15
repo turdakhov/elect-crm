@@ -48,33 +48,28 @@ new class extends Component {
             <div class="space-y-4">
                 @foreach ($purchases as $purchase)
                 <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h2 class="text-lg font-semibold">Закуп #{{ $purchase->id }}</h2>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ \Carbon\Carbon::parse($purchase->purchased_at)->format('d.m.Y') }}
-                                @if ($purchase->user)
-                                    · {{ $purchase->user->name }}
-                                @endif
-                            </p>
-                            @if ($purchase->comment)
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                {{ $purchase->comment }}
-                            </p>
-                            @endif
-                        </div>
-                        <div class="flex gap-2">
-                            <flux:button size="sm" variant="primary" icon="pencil" :href="route('purchases.edit', $purchase)">
-                                Редактировать
-                            </flux:button>
-                            <flux:button size="sm" color="blue" icon="shopping-bag" :href="route('purchases.items.index', $purchase)">
-                                Позиции ({{ $purchase->items->count() }})
-                            </flux:button>
-                            <flux:button size="sm" variant="danger" icon="trash" wire:click="delete({{ $purchase->id }})"
-                                onclick="return confirm('Вы уверены? Это удалит весь закуп.')">
-                                Удалить
-                            </flux:button>
-                        </div>
+                    <h2 class="text-lg font-semibold mb-2">Закуп #{{ $purchase->id }}</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        {{ \Carbon\Carbon::parse($purchase->purchased_at)->format('d.m.Y') }}
+                        @if ($purchase->user)
+                            · {{ $purchase->user->name }}
+                        @endif
+                    </p>
+                    @if ($purchase->comment)
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ $purchase->comment }}</p>
+                    @endif
+
+                    <div class="flex items-center gap-2">
+                        <flux:button size="sm" variant="primary" icon="pencil" :href="route('purchases.edit', $purchase)">
+                            Редактировать
+                        </flux:button>
+                        <flux:button size="sm" color="blue" icon="shopping-bag" :href="route('purchases.items.index', $purchase)">
+                            Позиции ({{ $purchase->items->count() }})
+                        </flux:button>
+                        <flux:button size="sm" variant="danger" icon="trash" wire:click="delete({{ $purchase->id }})"
+                            onclick="return confirm('Вы уверены? Это удалит весь закуп.')">
+                            Удалить
+                        </flux:button>
                     </div>
                 </div>
                 @endforeach

@@ -51,25 +51,22 @@ new class extends Component {
             <div class="space-y-4">
                 @foreach ($this->productSets as $set)
                 <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h2 class="text-lg font-semibold">{{ $set->name }}</h2>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $set->comment ?? 'Комментарий не указан' }}
-                            </p>
-                        </div>
-                        <div class="flex gap-2">
-                            <flux:button size="sm" variant="primary" icon="pencil" :href="route('project-product-set.edit', $set)">
-                                Редактировать
-                            </flux:button>
-                            <flux:button size="sm" color="blue" icon="shopping-bag" :href="route('project-product-set.items.index', $set)">
-                                Товары ({{ $set->items->count() }})
-                            </flux:button>
-                            <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSet({{ $set->id }})"
-                                onclick="return confirm('Вы уверены? Это удалит всю смету.')">
-                                Удалить
-                            </flux:button>
-                        </div>
+                    <h2 class="text-lg font-semibold mb-2">{{ $set->name }}</h2>
+                    @if ($set->comment)
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ $set->comment }}</p>
+                    @endif
+
+                    <div class="flex items-center gap-2">
+                        <flux:button size="sm" variant="primary" icon="pencil" :href="route('project-product-set.edit', $set)">
+                            Редактировать
+                        </flux:button>
+                        <flux:button size="sm" color="blue" icon="shopping-bag" :href="route('project-product-set.items.index', $set)">
+                            Товары ({{ $set->items->count() }})
+                        </flux:button>
+                        <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSet({{ $set->id }})"
+                            onclick="return confirm('Вы уверены? Это удалит всю смету.')">
+                            Удалить
+                        </flux:button>
                     </div>
                 </div>
                 @endforeach
