@@ -64,6 +64,8 @@ new class extends Component {
         $this->pipe_length = 0;
 
         session()->flash('message', 'Позиция успешно добавлена!');
+        
+        $this->dispatch('item-saved');
     }
 
     public function submit(): \Illuminate\Http\RedirectResponse
@@ -87,7 +89,7 @@ new class extends Component {
                         <h1 class="mb-1 text-2xl font-bold">Добавить кабель/гофру</h1>
                         <p class="mb-6 text-gray-600 dark:text-gray-400">{{ $project->name }}</p>
 
-                        <form wire:submit="save" class="space-y-6">
+                        <form wire:submit="save" class="space-y-6" x-data="{ focusNameField() { setTimeout(() => { const input = document.querySelector('input[wire\\:model=name]'); if(input) input.focus(); }, 100); } }" x-init="$wire.on('item-saved', () => focusNameField())">
                             <flux:input wire:model='floor' label="Этаж" />
                             <flux:input wire:model='room' label="Помещение" />
                             <flux:textarea wire:model='comment' label="Комментарий" />
