@@ -82,16 +82,20 @@ new class extends Component {
             <div class="relative overflow-x-auto">
                 <div>
                     <div class="p-6">
+                        <div class="mb-4">
+                            <flux:button variant="filled" icon="arrow-left" :href="route('projects.cable-items.index', $project->id)">Назад</flux:button>
+                        </div>
+                        
                         <h1 class="mb-1 text-2xl font-bold">Добавить кабель/гофру</h1>
                         <p class="mb-6 text-gray-600 dark:text-gray-400">{{ $project->name }}</p>
 
                         <form wire:submit="save" class="space-y-6">
                             <flux:input wire:model='floor' label="Этаж" />
                             <flux:input wire:model='room' label="Помещение" />
-                            <flux:input wire:model='name' label="Наименование" />
                             <flux:textarea wire:model='comment' label="Комментарий" />
                             <x-forms.select name="cable_id" cname="name" label="Кабель" :collection="$cables" with_empty />
                             <x-forms.select name="pipe_id" cname="name" label="Гофра" :collection="$pipes" with_empty />
+                            <flux:input wire:model='name' label="Наименование" />
                             <flux:input wire:model='cable_length' label="Длина кабеля (м)" type="number" step="0.01" />
                             <flux:input wire:model='pipe_length' label="Длина гофры (м)" type="number" step="0.01" />
 
