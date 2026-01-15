@@ -10,6 +10,7 @@ new class extends Component {
 
     public Project $project;
     public string $search = '';
+    public string $floorFilter = '';
 
     public function mount(Project $project)
     {
@@ -21,12 +22,16 @@ new class extends Component {
         $this->resetPage();
     }
 
+    public function updatedFloorFilter()
+    {
+        $this->resetPage();
+    }
+
     public function with(): array
     {
         $query = CableItem::query()
             ->with(['cable', 'pipe'])
-            ->where('project_id', $this->project->id)
-            ->latest();
+            ->where('project_id', $this->project->id);
 
         if ($this->search) {
             $query->where(function ($q) {
@@ -36,8 +41,24 @@ new class extends Component {
             });
         }
 
+        if ($this->floorFilter) {
+            $query->where('floor', $this->floorFilter);
+        }
+
+        $query->orderBy('floor')
+              ->orderBy('room')
+              ->orderBy('cable_id');
+
+        $floors = CableItem::where('project_id', $this->project->id)
+            ->distinct()
+            ->orderBy('floor')
+            ->pluck('floor')
+            ->filter()
+            ->values();
+
         return [
             'cableItems' => $query->paginate(15),
+            'floors' => $floors,
         ];
     }
 
@@ -62,8 +83,22 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="flex-1 max-w-md">
-            <flux:input wire:model.live="search" placeholder="Поиск..." icon="magnifying-glass" />
+        <div class="flex gap-4 items-end">
+            <div class="flex-1 max-w-md">
+                <flux:input wire:model.live="search" placeholder="Поиск..." icon="magnifying-glass" />
+            </div>
+            <div class="w-48">
+                <label for="floorFilter" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Этаж</label>
+                <select 
+                    id="floorFilter"
+                    wire:model.live="floorFilter" 
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option value="">Все этажи</option>
+                    @foreach($floors as $floor)
+                        <option value="{{ $floor }}">{{ $floor }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         @if (session()->has('message'))
