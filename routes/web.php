@@ -57,11 +57,6 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('users', 'users-index')->name('users.index');
     Volt::route('users/create', 'users-create')->name('users.create');
     Volt::route('users/{user}/edit', 'users-edit')->name('users.edit');
-    Volt::route('expense-types', 'expense-types-index')->name('expense-types.index');
-    Volt::route('expense-types/create', 'expense-types-create')->name('expense-types.create');
-    Volt::route('expense-types/{expense_type}/edit', 'expense-types-edit')->name('expense-types.edit');
-    Volt::route('users/create', 'users-create')->name('users.create');
-    Volt::route('users/{user}/edit', 'users-edit')->name('users.edit');
 
     Volt::route('file-types', 'file-types-index')->name('file-types.index');
     Volt::route('file-types/create', 'file-types-create')->name('file-types.create');
@@ -70,6 +65,19 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('products', 'products-index')->name('products.index');
     Volt::route('products/create', 'products-create')->name('products.create');
     Volt::route('products/{product}/edit', 'products-edit')->name('products.edit');
+
+    Volt::route('cables', 'cables-index')->name('cables.index');
+    Volt::route('cables/create', 'cables-create')->name('cables.create');
+    Volt::route('cables/{cable}/edit', 'cables-edit')->name('cables.edit');
+
+    Volt::route('pipes', 'pipes-index')->name('pipes.index');
+    Volt::route('pipes/create', 'pipes-create')->name('pipes.create');
+    Volt::route('pipes/{pipe}/edit', 'pipes-edit')->name('pipes.edit');
+
+    // Cable Items (project-specific)
+    Volt::route('projects/{project}/cable-items', 'cable-items-index')->name('projects.cable-items.index');
+    Volt::route('projects/{project}/cable-items/create', 'cable-items-create')->name('projects.cable-items.create');
+    Volt::route('cable-items/{cableItem}/edit', 'cable-items-edit')->name('cable-items.edit');
 });
 
 Route::middleware(['auth'])->group(function () {

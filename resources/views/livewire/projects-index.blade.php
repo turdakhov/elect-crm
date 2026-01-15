@@ -92,6 +92,8 @@ new class extends Component {
 
                                 <flux:button size="xs" color="rose" icon="document-arrow-down" :href="route('projects.expenses.index', $project)">Расходы</flux:button>
 
+                                <flux:button size="xs" color="cyan" icon="bolt" :href="route('projects.cable-items.index', $project)">Кабели</flux:button>
+
                                 <flux:button size="xs" icon="trash" wire:click="delete({{ $project->id }})"
                                     onclick="return confirm('Are you sure?')">Удалить
                                 </flux:button>

@@ -22,6 +22,8 @@
                 <flux:navlist.item icon="list-bullet" :href="route('expense-types.index')" :current="request()->routeIs('expense-types*')" wire:navigate class="mb-2">Типы расходов</flux:navlist.item>
                 <flux:navlist.item icon="folder" :href="route('file-types.index')" :current="request()->routeIs('file-types*')" wire:navigate class="mb-2">Типы файлов</flux:navlist.item>
                 <flux:navlist.item icon="shopping-bag" :href="route('products.index')" :current="request()->routeIs('products*')" wire:navigate class="mb-2">Товары</flux:navlist.item>
+                <flux:navlist.item icon="bolt" :href="route('cables.index')" :current="request()->routeIs('cables*')" wire:navigate class="mb-2">Кабели</flux:navlist.item>
+                <flux:navlist.item icon="circle-stack" :href="route('pipes.index')" :current="request()->routeIs('pipes*')" wire:navigate class="mb-2">Гофры</flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 
