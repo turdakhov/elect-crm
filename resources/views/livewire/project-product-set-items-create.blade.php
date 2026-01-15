@@ -9,6 +9,7 @@ new class extends Component {
     public ProjectProductSet $projectProductSet;
     public $product_id;
     public $quantity = 1;
+    public $comment = '';
     public $search = '';
     public $display_value = '';
 
@@ -75,6 +76,7 @@ new class extends Component {
                 'unique:project_product_set_items,product_id,NULL,id,project_product_set_id,'.$this->projectProductSet->id,
             ],
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ], [
             'product_id.unique' => 'Этот товар уже добавлен в смету.',
             'quantity.max' => 'Количество не должно превышать 10000.',
@@ -84,6 +86,7 @@ new class extends Component {
             'project_product_set_id' => $this->projectProductSet->id,
             'product_id' => $this->product_id,
             'quantity' => $this->quantity,
+            'comment' => $this->comment,
         ]);
 
         session()->flash('message', 'Товар добавлен в смету!');
@@ -138,6 +141,17 @@ new class extends Component {
                     <flux:label for="quantity">Количество</flux:label>
                     <flux:input id="quantity" type="number" wire:model="quantity" min="1" placeholder="Количество"></flux:input>
                     <flux:error name="quantity" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label for="comment">Комментарий</flux:label>
+                    <flux:textarea
+                        id="comment"
+                        wire:model="comment"
+                        placeholder="Комментарий к позиции (необязательно)"
+                        rows="3"
+                    ></flux:textarea>
+                    <flux:error name="comment" />
                 </flux:field>
 
                 <div class="flex gap-3">

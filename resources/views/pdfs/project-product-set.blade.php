@@ -146,7 +146,7 @@
         <table class="header-table">
             <tr>
                 <td class="header-info">
-                    <h1>Смета: {{ $productSet->name }}</h1>
+                    <h1>Смета по электрике: {{ $productSet->name }}</h1>
                     <div class="project-info">Проект: <strong>{{ $productSet->project->name }}</strong></div>
                     <div class="project-info">Дата: <strong>{{ now()->format('d.m.Y') }}</strong></div>
 
@@ -173,6 +173,7 @@
                 <th style="width: 44%;">Товар</th>
                 <th style="width: 12%;" class="center">Кол-во</th>
                 <th style="width: 8%;" class="center">Ед.изм.</th>
+                <th style="width: 18%;" class="center">Комментарий</th>
             </tr>
         </thead>
         <tbody>
@@ -194,12 +195,14 @@
                 </td>
                 <td class="center">{{ $item->quantity }}</td>
                 <td class="center">{{ $item->product->unit ?? '—' }}</td>
+                <td>{{ $item->comment ?? '—' }}</td>
             </tr>
             @endforeach
             <tr class="total">
                 <td></td>
                 <td class="image-cell"></td>
                 <td><strong>Итого: {{ $items->count() }} товаров</strong></td>
+                <td></td>
                 <td></td>
                 <td></td>
             </tr>

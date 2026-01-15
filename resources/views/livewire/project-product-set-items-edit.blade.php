@@ -9,6 +9,7 @@ new class extends Component {
     public ProjectProductSetItem $projectProductSetItem;
     public $product_id;
     public $quantity;
+    public $comment = '';
     public $search = '';
     public $display_value = '';
 
@@ -18,6 +19,7 @@ new class extends Component {
         $this->product_id = $projectProductSetItem->product_id;
         $this->quantity = $projectProductSetItem->quantity;
         $this->display_value = $projectProductSetItem->product->name;
+        $this->comment = $projectProductSetItem->comment;
     }
 
     public function selectProduct(int $productId): void
@@ -74,9 +76,10 @@ new class extends Component {
             'product_id' => [
                 'required',
                 'exists:products,id',
-                'unique:project_product_set_items,product_id,'.$this->projectProductSetItem->id.',id,project_product_set_id,'.$this->projectProductSetItem->project_product_set_id,
+                'unique:project_product_set_items,product_id,' . $this->projectProductSetItem->id . ',id,project_product_set_id,' . $this->projectProductSetItem->project_product_set_id,
             ],
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ], [
             'product_id.unique' => 'Этот товар уже добавлен в смету.',
             'quantity.max' => 'Количество не должно превышать 10000.',
@@ -85,9 +88,11 @@ new class extends Component {
         $this->projectProductSetItem->update([
             'product_id' => $this->product_id,
             'quantity' => $this->quantity,
+            'comment' => $this->comment,
         ]);
 
         session()->flash('message', 'Товар успешно обновлен!');
+        return redirect()->route('project-product-set.items.index', $this->projectProductSetItem->projectProductSet);
     }
 }; ?>
 
@@ -144,6 +149,16 @@ new class extends Component {
                     <flux:label for="quantity">Количество</flux:label>
                     <flux:input id="quantity" type="number" wire:model="quantity" min="1" placeholder="Количество"></flux:input>
                     <flux:error name="quantity" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label for="comment">Комментарий</flux:label>
+                    <flux:textarea
+                        id="comment"
+                        wire:model="comment"
+                        placeholder="Комментарий к позиции (необязательно)"
+                        rows="3"></flux:textarea>
+                    <flux:error name="comment" />
                 </flux:field>
 
                 <div class="flex gap-3">

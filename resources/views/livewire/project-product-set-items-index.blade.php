@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\ProjectProductSet;
+use Illuminate\Support\Str;
 
 new class extends Component {
     public ProjectProductSet $projectProductSet;
@@ -9,7 +10,7 @@ new class extends Component {
     public function with(): array
     {
         return [
-            'items' => $this->projectProductSet->items,
+            'items' => $this->projectProductSet->items()->latest()->get(),
         ];
     }
 
@@ -26,7 +27,7 @@ new class extends Component {
 
     public function exportPdf()
     {
-        $items = $this->projectProductSet->items->map(function ($item) {
+        $items = $this->projectProductSet->items()->latest()->get()->map(function ($item) {
             if ($item->product->file && $item->product->file->path) {
                 $filePath = storage_path('app/public/' . $item->product->file->path);
                 if (file_exists($filePath)) {
@@ -52,7 +53,11 @@ new class extends Component {
             ->setOption('enable_local', true);
 
         // Сохраняем PDF во временный файл
-        $filename = 'estimate-' . $this->projectProductSet->id . '.pdf';
+        $setSlug = Str::slug($this->projectProductSet->name, '-');
+        $projectSlug = Str::slug($this->projectProductSet->project->name, '-');
+        $fallback = 'smeta-' . $this->projectProductSet->id;
+        $filename = trim('smeta-' . ($setSlug ?: '') . '-' . ($projectSlug ?: ''), '-');
+        $filename = ($filename !== 'smeta' ? $filename : $fallback) . '.pdf';
         $path = storage_path('app/temp/' . $filename);
 
         if (!is_dir(storage_path('app/temp'))) {
@@ -97,6 +102,7 @@ new class extends Component {
                             <th scope="col" class="px-6 py-3">Товар</th>
                             <th scope="col" class="px-6 py-3 text-center">Фото</th>
                             <th scope="col" class="px-6 py-3">Количество</th>
+                            <th scope="col" class="px-6 py-3">Комментарий</th>
                             <th scope="col" class="px-6 py-3 justify-end flex">Управление</th>
                         </tr>
                     </thead>
@@ -122,7 +128,10 @@ new class extends Component {
                                 @endif
                             </td>
                             <td class="px-6 py-4">
-                                {{ $item->quantity }}
+                                {{ $item->quantity }} {{ $item->product->unit ?? '' }}
+                            </td>
+                            <td class="px-6 py-4 text-gray-700 dark:text-gray-200">
+                                {{ $item->comment ?? '—' }}
                             </td>
                             <td class="px-6 py-4 flex gap-2 justify-end">
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('project-product-set-items.edit', $item)">
