@@ -132,10 +132,12 @@ describe('Товары в смете', function () {
             'project_product_set_id' => $this->productSet->id,
             'product_id' => $this->product->id,
             'quantity' => 5,
+            'comment' => 'Комментарий к позиции',
         ]);
 
         expect(ProjectProductSetItem::count())->toBe(1);
         expect(ProjectProductSetItem::first()->quantity)->toBe(5);
+        expect(ProjectProductSetItem::first()->comment)->toBe('Комментарий к позиции');
     });
 
     test('можно обновить товар в смете', function () {
@@ -143,11 +145,16 @@ describe('Товары в смете', function () {
             'project_product_set_id' => $this->productSet->id,
             'product_id' => $this->product->id,
             'quantity' => 3,
+            'comment' => 'Старый комментарий',
         ]);
 
-        $item->update(['quantity' => 10]);
+        $item->update([
+            'quantity' => 10,
+            'comment' => 'Новый комментарий',
+        ]);
 
         expect($item->fresh()->quantity)->toBe(10);
+        expect($item->fresh()->comment)->toBe('Новый комментарий');
     });
 
     test('можно удалить товар из сметы', function () {
@@ -170,6 +177,7 @@ describe('Товары в смете', function () {
         $errors = validate($data, [
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ]);
 
         expect($errors)->toHaveKey('product_id');
@@ -184,6 +192,7 @@ describe('Товары в смете', function () {
         $errors = validate($data, [
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ]);
 
         expect($errors)->toHaveKey('quantity');
@@ -198,6 +207,7 @@ describe('Товары в смете', function () {
         $errors = validate($data, [
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ]);
 
         expect($errors)->toHaveKey('quantity');
@@ -212,9 +222,26 @@ describe('Товары в смете', function () {
         $errors = validate($data, [
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ]);
 
         expect($errors)->toHaveKey('quantity');
+    });
+
+    test('комментарий к товару валидируется - максимум 500 символов', function () {
+        $data = [
+            'product_id' => $this->product->id,
+            'quantity' => 1,
+            'comment' => str_repeat('a', 501),
+        ];
+
+        $errors = validate($data, [
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        expect($errors)->toHaveKey('comment');
     });
 
     test('нельзя добавить один товар дважды в одну смету', function () {
@@ -238,6 +265,7 @@ describe('Товары в смете', function () {
                 'unique:project_product_set_items,product_id,NULL,id,project_product_set_id,'.$productSet->id,
             ],
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ]);
 
         expect($errors)->toHaveKey('product_id');
