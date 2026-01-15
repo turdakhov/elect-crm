@@ -27,6 +27,7 @@ class StoreProjectProductSetItemRequest extends FormRequest
                 'unique:project_product_set_items,product_id,NULL,id,project_product_set_id,'.$projectProductSet->id,
             ],
             'quantity' => 'required|integer|min:1|max:10000',
+            'comment' => 'nullable|string|max:500',
         ];
     }
 
@@ -43,6 +44,8 @@ class StoreProjectProductSetItemRequest extends FormRequest
             'quantity.integer' => 'Количество должно быть целым числом.',
             'quantity.min' => 'Количество должно быть не менее 1.',
             'quantity.max' => 'Количество не должно превышать 10000.',
+            'comment.string' => 'Комментарий должен быть строкой.',
+            'comment.max' => 'Комментарий не должен превышать 500 символов.',
         ];
     }
 }

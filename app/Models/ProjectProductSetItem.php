@@ -15,6 +15,7 @@ class ProjectProductSetItem extends Model
         'project_product_set_id',
         'product_id',
         'quantity',
+        'comment',
     ];
 
     public function casts(): array

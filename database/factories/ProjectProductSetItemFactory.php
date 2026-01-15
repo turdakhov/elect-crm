@@ -25,6 +25,7 @@ class ProjectProductSetItemFactory extends Factory
             'project_product_set_id' => ProjectProductSet::query()->inRandomOrder()->value('id') ?? ProjectProductSet::factory()->create()->id,
             'product_id' => Product::query()->inRandomOrder()->value('id') ?? Product::factory()->create()->id,
             'quantity' => $this->faker->numberBetween(1, 50),
+            'comment' => $this->faker->optional()->sentence(),
         ];
     }
 }
