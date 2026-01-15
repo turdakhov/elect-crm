@@ -56,16 +56,16 @@ new class extends Component {
             'pipe_length' => $this->pipe_length,
         ]);
 
-        $this->floor = '';
-        $this->room = '';
+        // Очищаем только наименование, комментарий и длины
+        // Сохраняем этаж, комнату, кабель и гофру для следующей записи
         $this->name = '';
         $this->comment = '';
-        $this->cable_id = null;
-        $this->pipe_id = null;
         $this->cable_length = 0;
         $this->pipe_length = 0;
 
         session()->flash('message', 'Позиция успешно добавлена!');
+        
+        $this->dispatch('focus-name-input');
     }
 
     public function submit(): \Illuminate\Http\RedirectResponse
@@ -95,7 +95,7 @@ new class extends Component {
                             <flux:textarea wire:model='comment' label="Комментарий" />
                             <x-forms.select name="cable_id" cname="name" label="Кабель" :collection="$cables" with_empty />
                             <x-forms.select name="pipe_id" cname="name" label="Гофра" :collection="$pipes" with_empty />
-                            <flux:input wire:model='name' label="Наименование" />
+                            <flux:input wire:model='name' label="Наименование" x-data x-on:focus-name-input.window="$el.querySelector('input').focus()" />
                             <flux:input wire:model='cable_length' label="Длина кабеля (м)" type="number" step="0.01" />
                             <flux:input wire:model='pipe_length' label="Длина гофры (м)" type="number" step="0.01" />
 
