@@ -1,13 +1,16 @@
 <?php
 
-use App\Models\{CableItem, Project};
-use Livewire\Volt\Component;
+namespace App\Http\Controllers;
+
+use App\Models\CableItem;
+use App\Models\Project;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
 
-new class extends Component {
-    public function mount(Project $project)
+class CableItemsExportController extends Controller
+{
+    public function __invoke(Project $project): Response
     {
-
         $cableItems = CableItem::where('project_id', $project->id)
             ->with(['cable', 'pipe'])
             ->orderBy('cable_id')
@@ -15,14 +18,13 @@ new class extends Component {
             ->orderBy('room')
             ->get();
 
-        // Группируем по cable_id
         $groupedByCable = $cableItems->groupBy('cable_id');
 
         $pdf = Pdf::loadView('cable-items-export-template', [
             'groupedByCable' => $groupedByCable,
             'projectName' => $project->name,
-        ])->setPaper([0, 0, 2834, 2834]); // 1м x 1м в пиксела (28.34 px/cm)
+        ])->setPaper([0, 0, 2834, 2834]);
 
         return $pdf->download("cable-items-{$project->id}.pdf");
     }
-}; ?>
+}

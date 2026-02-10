@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CableItemsExportController;
 use App\Livewire\ComplexesCreate;
 use App\Livewire\ComplexesIndex;
 use Illuminate\Support\Facades\Route;
@@ -77,7 +78,8 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     // Cable Items (project-specific)
     Volt::route('projects/{project}/cable-items', 'cable-items-index')->name('projects.cable-items.index');
     Volt::route('projects/{project}/cable-items/create', 'cable-items-create')->name('projects.cable-items.create');
-    Volt::route('projects/{project}/cable-items/export-pdf', 'cable-items-export-pdf')->name('projects.cable-items.export-pdf');
+    Route::get('projects/{project}/cable-items/export-pdf', CableItemsExportController::class)
+        ->name('projects.cable-items.export-pdf');
     Volt::route('cable-items/{cableItem}/edit', 'cable-items-edit')->name('cable-items.edit');
 });
 
