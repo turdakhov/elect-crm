@@ -23,7 +23,9 @@ class CableItemsExportController extends Controller
         $pdf = Pdf::loadView('cable-items-export-template', [
             'groupedByCable' => $groupedByCable,
             'projectName' => $project->name,
-        ])->setPaper([0, 0, 2834, 2834]);
+        ])
+            ->setOption('encoding', 'UTF-8')
+            ->setPaper([0, 0, 2834, 2834]);
 
         return $pdf->download("cable-items-{$project->id}.pdf");
     }

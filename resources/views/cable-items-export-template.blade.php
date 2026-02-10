@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="utf-8">
     <style>
@@ -10,7 +10,7 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: "DejaVu Sans", sans-serif;
             width: 100%;
             height: 100%;
             padding: 20px;
