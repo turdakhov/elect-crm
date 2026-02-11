@@ -11,6 +11,7 @@ new class extends Component {
     public Project $project;
     public string $search = '';
     public string $floorFilter = '';
+    public string $exportFloor = '';
 
     public function mount(Project $project)
     {
@@ -76,14 +77,22 @@ new class extends Component {
                 <h1 class="text-2xl font-bold">Кабели и гофры</h1>
                 <p class="text-gray-600 dark:text-gray-400">{{ $project->name }}</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <flux:button variant="primary" color="green" icon="plus" :href="route('projects.cable-items.create', $project)">
                     Добавить позицию
                 </flux:button>
                 <flux:button variant="primary" color="blue" icon="arrow-up-tray" :href="route('projects.cable-items.import', $project)">
                     Импорт CSV
                 </flux:button>
-                <flux:button variant="primary" color="blue" icon="arrow-down-tray" :href="route('projects.cable-items.export-pdf', $project)" target="_blank">
+                <div class="min-w-[180px]">
+                    <flux:select wire:model.live="exportFloor" aria-label="Этаж для экспорта">
+                        <option value="">Все этажи</option>
+                        @foreach($floors as $floor)
+                            <option value="{{ $floor }}">{{ $floor }}</option>
+                        @endforeach
+                    </flux:select>
+                </div>
+                <flux:button variant="primary" color="blue" icon="arrow-down-tray" :href="route('projects.cable-items.export-pdf', ['project' => $project, 'floor' => $exportFloor ?: null])" target="_blank">
                     Экспорт PDF
                 </flux:button>
             </div>
