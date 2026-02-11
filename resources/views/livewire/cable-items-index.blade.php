@@ -80,6 +80,9 @@ new class extends Component {
                 <flux:button variant="primary" color="green" icon="plus" :href="route('projects.cable-items.create', $project)">
                     Добавить позицию
                 </flux:button>
+                <flux:button variant="primary" color="blue" icon="arrow-up-tray" :href="route('projects.cable-items.import', $project)">
+                    Импорт CSV
+                </flux:button>
                 <flux:button variant="primary" color="blue" icon="arrow-down-tray" :href="route('projects.cable-items.export-pdf', $project)" target="_blank">
                     Экспорт PDF
                 </flux:button>

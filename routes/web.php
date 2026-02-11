@@ -78,6 +78,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     // Cable Items (project-specific)
     Volt::route('projects/{project}/cable-items', 'cable-items-index')->name('projects.cable-items.index');
     Volt::route('projects/{project}/cable-items/create', 'cable-items-create')->name('projects.cable-items.create');
+    Volt::route('projects/{project}/cable-items/import', 'cable-items-import')->name('projects.cable-items.import');
     Route::get('projects/{project}/cable-items/export-pdf', CableItemsExportController::class)
         ->name('projects.cable-items.export-pdf');
     Volt::route('cable-items/{cableItem}/edit', 'cable-items-edit')->name('cable-items.edit');
