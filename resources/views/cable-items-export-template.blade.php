@@ -19,7 +19,7 @@
 
         .project-title {
             text-align: center;
-            font-size: 16px;
+            font-size: 40px;
             font-weight: bold;
             margin-bottom: 20px;
         }
@@ -40,6 +40,11 @@
         .cells-grid {
             font-size: 0;
             margin-bottom: 15px;
+        }
+
+        .cells-row {
+            font-size: 0;
+            white-space: nowrap;
         }
 
         .cell {
@@ -123,7 +128,7 @@
 
 <body>
     <div class="project-title">
-        {{ $projectName }} - Кабели и гофры
+        Кабели проекта "{{ $projectName }}" - {{ $floorLabel }}
     </div>
 
     @forelse($groupedByCable as $cableId => $items)
@@ -132,33 +137,39 @@
             Кабель: {{ $items->first()->cable->name }}
         </div>
         <div class="cells-grid">
-            @foreach($items as $item)
-            <div class="cell">
-                <div class="cell-room">{{ $item->room }}</div>
-                <div class="cell-floor">{{ $item->floor }}</div>
-                <div class="cell-name">{{ Str::limit($item->name, 24, '') }}</div>
-                <div class="cell-info">
-                    @if($item->cable)
-                    <div class="cell-info-row">
-                        {{ $item->cable->name }}
+            @foreach($items->chunk(14) as $row)
+            @for ($repeat = 0; $repeat < 2; $repeat++)
+                <div class="cells-row">
+                @foreach($row as $item)
+                <div class="cell">
+                    <div class="cell-room">{{ $item->room }}</div>
+                    <div class="cell-floor">{{ $item->floor }}</div>
+                    <div class="cell-name">{{ Str::limit($item->name, 24, '') }}</div>
+                    <div class="cell-info">
+                        @if($item->cable)
+                        <div class="cell-info-row">
+                            {{ $item->cable->name }}
+                        </div>
+                        @endif
+                        <div class="cell-info-row">
+                            <span class="cell-length">{{ number_format((float)($item->cable_length ?? 0), 1, '.', '') }}</span>
+                        </div>
+                        @if($item->pipe)
+                        <div class="cell-info-row">
+                            *{{ number_format((float)($item->pipe_length ?? 0), 1, '.', '') }}*
+                        </div>
+                        @endif
                     </div>
-                    @endif
-                    <div class="cell-info-row">
-                        <span class="cell-length">{{ number_format((float)($item->cable_length ?? 0), 1, '.', '') }}</span>
+                    <div class="cell-bottom">
+                        <div class="cell-bottom-item">{{ Str::limit($item->name, 20, '') }}</div>
+                        <div class="cell-bottom-item">{{ Str::limit($item->name, 20, '') }}</div>
                     </div>
-                    @if($item->pipe)
-                    <div class="cell-info-row">
-                        *{{ number_format((float)($item->pipe_length ?? 0), 1, '.', '') }}*
-                    </div>
-                    @endif
                 </div>
-                <div class="cell-bottom">
-                    <div class="cell-bottom-item">{{ Str::limit($item->name, 20, '') }}</div>
-                    <div class="cell-bottom-item">{{ Str::limit($item->name, 20, '') }}</div>
-                </div>
-            </div>
-            @endforeach
+                @endforeach
         </div>
+        @endfor
+        @endforeach
+    </div>
     </div>
     @empty
     <p>Нет данных для экспорта</p>

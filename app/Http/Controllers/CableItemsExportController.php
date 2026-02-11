@@ -29,9 +29,10 @@ class CableItemsExportController extends Controller
         $pdf = Pdf::loadView('cable-items-export-template', [
             'groupedByCable' => $groupedByCable,
             'projectName' => $project->name,
+            'floorLabel' => $floor ?: 'Все этажи',
         ])
             ->setOption('encoding', 'UTF-8')
-            ->setPaper([0, 0, 2834, 2834]);
+            ->setPaper([0, 0, 2834, 8502]);
 
         $projectLabel = $this->normalizeFilenamePart($project->name) ?: "проект-{$project->id}";
         $floorLabel = $floor ? $this->normalizeFilenamePart($floor) : 'все-этажи';
