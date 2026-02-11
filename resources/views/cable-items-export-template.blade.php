@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="utf-8">
     <style>
@@ -28,107 +29,140 @@
         }
 
         .cable-group-header {
-            font-size: 12px;
+            font-size: 45px;
             font-weight: bold;
             margin-bottom: 10px;
             padding: 5px;
-            background-color: #f0f0f0;
+            background-color: #fff;
             border-radius: 3px;
         }
 
         .cells-grid {
-            display: grid;
-            grid-template-columns: repeat(14, 1fr);
-            gap: 8px;
+            font-size: 0;
             margin-bottom: 15px;
         }
 
         .cell {
             border: 1px solid #333;
-            padding: 8px;
-            min-height: 100px;
-            display: flex;
-            flex-direction: column;
+            padding: 4px 4px 0 4px;
+            min-height: auto;
+            display: inline-block;
+            vertical-align: top;
+            width: 6.8%;
+            margin: 0;
             font-size: 10px;
             position: relative;
             background-color: #fff;
         }
 
         .cell-room {
-            font-size: 14px;
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 4px;
-            flex-grow: 1;
+            margin-bottom: 0;
+            text-align: center;
+            text-transform: uppercase;
+            line-height: 1;
         }
 
         .cell-floor {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            font-size: 8px;
-            color: #666;
+            font-size: 10px;
+            text-align: right;
+            line-height: 1;
+        }
+
+        .cell-name {
+            font-size: 15px;
+            margin-bottom: 0;
+            text-align: center;
+            text-transform: uppercase;
+            line-height: 1;
         }
 
         .cell-info {
-            font-size: 9px;
-            line-height: 1.3;
+            font-size: 0;
+            text-align: center;
+            line-height: 1;
             border-top: 1px solid #ddd;
-            padding-top: 4px;
-            margin-top: 4px;
+            padding-top: 6px;
+            margin-bottom: -4px;
+            padding-bottom: 0;
         }
 
         .cell-info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2px;
+            display: inline-block;
+            width: 31%;
+            margin: 0;
+            text-align: center;
+            word-wrap: break-word;
+            font-size: 20px;
+            line-height: 1;
+            font-weight: bold;
+        }
+
+        .cell-length {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .cell-bottom {
+            font-size: 0;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        .cell-bottom-item {
+            display: inline-block;
+            width: 48%;
+            font-size: 9px;
+            text-align: center;
+            word-wrap: break-word;
+            line-height: 1;
         }
     </style>
 </head>
+
 <body>
     <div class="project-title">
         {{ $projectName }} - Кабели и гофры
     </div>
 
     @forelse($groupedByCable as $cableId => $items)
-        <div class="cable-group">
-            <div class="cable-group-header">
-                @if($cableId && $items->first()?->cable)
-                    Кабель: {{ $items->first()?->cable->name }}
-                @else
-                    Без кабеля
-                @endif
-            </div>
-            <div class="cells-grid">
-                @foreach($items as $item)
-                    <div class="cell">
-                        <div class="cell-floor">{{ $item->floor }}</div>
-                        <div class="cell-room">{{ $item->room }}</div>
-                        <div class="cell-info">
-                            @if($item->cable)
-                                <div class="cell-info-row">
-                                    <span>Кабель:</span>
-                                    <strong>{{ $item->cable->name }}</strong>
-                                </div>
-                            @endif
-                            @if($item->cable_length)
-                                <div class="cell-info-row">
-                                    <span>Длина:</span>
-                                    <strong>{{ $item->cable_length }} м</strong>
-                                </div>
-                            @endif
-                            @if($item->pipe && $item->pipe_length)
-                                <div class="cell-info-row">
-                                    <span>Гофра:</span>
-                                    <strong>{{ $item->pipe_length }} м</strong>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+    <div class="cable-group">
+        <div class="cable-group-header">
+            Кабель: {{ $items->first()->cable->name }}
         </div>
+        <div class="cells-grid">
+            @foreach($items as $item)
+            <div class="cell">
+                <div class="cell-room">{{ $item->room }}</div>
+                <div class="cell-floor">{{ $item->floor }}</div>
+                <div class="cell-name">{{ Str::limit($item->name, 24, '') }}</div>
+                <div class="cell-info">
+                    @if($item->cable)
+                    <div class="cell-info-row">
+                        {{ $item->cable->name }}
+                    </div>
+                    @endif
+                    <div class="cell-info-row">
+                        <span class="cell-length">{{ number_format((float)($item->cable_length ?? 0), 1, '.', '') }}</span>
+                    </div>
+                    @if($item->pipe)
+                    <div class="cell-info-row">
+                        *{{ number_format((float)($item->pipe_length ?? 0), 1, '.', '') }}*
+                    </div>
+                    @endif
+                </div>
+                <div class="cell-bottom">
+                    <div class="cell-bottom-item">{{ Str::limit($item->name, 20, '') }}</div>
+                    <div class="cell-bottom-item">{{ Str::limit($item->name, 20, '') }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
     @empty
-        <p>Нет данных для экспорта</p>
+    <p>Нет данных для экспорта</p>
     @endforelse
 </body>
+
 </html>
