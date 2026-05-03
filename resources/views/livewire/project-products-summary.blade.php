@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use App\Models\Project;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 new class extends Component {
     public Project $project;
@@ -70,6 +71,88 @@ new class extends Component {
             return [$colorOrder[$item['color']], $item['product']->name];
         })->values();
     }
+
+    public function exportPdf()
+    {
+        $estimateProducts = $this->project->productSets()
+            ->with('items.product.file')
+            ->get()
+            ->flatMap(fn($set) => $set->items)
+            ->groupBy('product_id')
+            ->map(fn($items) => [
+                'product' => $items->first()->product,
+                'estimate_quantity' => $items->sum('quantity'),
+            ]);
+
+        $purchaseProducts = $this->project->purchases()
+            ->with('items.product')
+            ->get()
+            ->flatMap(fn($purchase) => $purchase->items)
+            ->groupBy('product_id')
+            ->map(fn($items) => [
+                'purchase_quantity' => $items->sum('quantity'),
+            ]);
+
+        $items = $estimateProducts
+            ->map(function ($estimate, $productId) use ($purchaseProducts) {
+                $estimateQuantity = $estimate['estimate_quantity'];
+                $purchaseQuantity = $purchaseProducts->get($productId)['purchase_quantity'] ?? 0;
+                $remainingQuantity = $estimateQuantity - $purchaseQuantity;
+
+                if ($remainingQuantity <= 0) {
+                    return null;
+                }
+
+                $product = $estimate['product'];
+                $product->imageBase64 = null;
+
+                if ($product->file && $product->file->path) {
+                    $filePath = storage_path('app/public/' . $product->file->path);
+
+                    if (file_exists($filePath)) {
+                        $imageData = base64_encode(file_get_contents($filePath));
+                        $mimeType = mime_content_type($filePath);
+                        $product->imageBase64 = "data:$mimeType;base64,$imageData";
+                    }
+                }
+
+                return (object) [
+                    'product' => $product,
+                    'quantity' => $remainingQuantity,
+                    'comment' => null,
+                ];
+            })
+            ->filter()
+            ->sortBy(fn($item) => $item->product->name)
+            ->values();
+
+        $pdfProductSet = (object) [
+            'name' => 'Недостающие товары',
+            'project' => $this->project,
+            'comment' => 'Только позиции, которые нужно докупить.',
+        ];
+
+        $pdf = \PDF::loadView('pdfs.project-product-set', [
+            'productSet' => $pdfProductSet,
+            'items' => $items,
+        ])
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('chroot', public_path())
+            ->setOption('encoding', 'UTF-8')
+            ->setOption('enable_local', true);
+
+        $projectSlug = Str::slug($this->project->name, '-');
+        $filename = trim('smeta-nedostayushchie-tovary-' . ($projectSlug ?: $this->project->id), '-') . '.pdf';
+        $path = storage_path('app/temp/' . $filename);
+
+        if (!is_dir(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+
+        $pdf->save($path);
+
+        return response()->download($path, $filename)->deleteFileAfterSend(true);
+    }
 }; ?>
 
 <div>
@@ -79,6 +162,9 @@ new class extends Component {
                 <h1 class="text-2xl font-bold">Сводка товаров</h1>
                 <p class="text-gray-600 dark:text-gray-400">{{ $project->name }}</p>
             </div>
+            <flux:button color="emerald" icon="document-text" wire:click="exportPdf">
+                Скачать PDF
+            </flux:button>
         </div>
 
         @if ($this->products->count() > 0)
