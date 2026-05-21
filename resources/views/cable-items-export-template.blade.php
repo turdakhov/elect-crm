@@ -143,7 +143,12 @@
                 @foreach($row as $item)
                 <div class="cell">
                     <div class="cell-room">{{ $item->room }}</div>
-                    <div class="cell-floor">{{ $item->floor }}</div>
+                    <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 10px; line-height: 1;">
+                        <tr>
+                            <td align="left">{{ $item->floor }}</td>
+                            <td align="right">{{ $item->pipe?->name ?? '' }}</td>
+                        </tr>
+                    </table>
                     <div class="cell-name">{{ Str::limit($item->name, 24, '') }}</div>
                     <div class="cell-info">
                         @if($item->cable)
