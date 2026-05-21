@@ -68,6 +68,7 @@ new class extends Component {
         $cableItem->delete();
         session()->flash('message', 'Позиция удалена!');
     }
+
 }; ?>
 
 <div>
@@ -94,6 +95,9 @@ new class extends Component {
                 </div>
                 <flux:button variant="primary" color="blue" icon="arrow-down-tray" :href="route('projects.cable-items.export-pdf', ['project' => $project, 'floor' => $exportFloor ?: null])" target="_blank">
                     Экспорт PDF
+                </flux:button>
+                <flux:button variant="primary" color="blue" icon="chart-bar" :href="route('projects.cable-items.summary', $project)">
+                    Сводка
                 </flux:button>
             </div>
         </div>
