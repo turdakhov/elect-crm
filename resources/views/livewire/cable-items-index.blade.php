@@ -79,9 +79,6 @@ new class extends Component {
                 <p class="text-gray-600 dark:text-gray-400">{{ $project->name }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <flux:button variant="primary" color="green" icon="plus" :href="route('projects.cable-items.create', $project)">
-                    Добавить позицию
-                </flux:button>
                 <flux:button variant="primary" color="blue" icon="arrow-up-tray" :href="route('projects.cable-items.import', $project)">
                     Импорт CSV
                 </flux:button>
@@ -118,6 +115,9 @@ new class extends Component {
                     @endforeach
                 </select>
             </div>
+            <flux:button variant="primary" color="green" icon="plus" :href="route('projects.cable-items.create', $project)" class="ml-auto">
+                Добавить позицию
+            </flux:button>
         </div>
 
         @if (session()->has('message'))
@@ -181,6 +181,11 @@ new class extends Component {
                     </tbody>
                 </table>
             </div>
+            @if ($cableItems->hasPages())
+            <div class="m-4">
+                {{ $cableItems->links() }}
+            </div>
+            @endif
         </div>
     </div>
 </div>

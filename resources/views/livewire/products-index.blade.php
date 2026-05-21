@@ -120,6 +120,11 @@ new class extends Component {
                     </tbody>
                 </table>
             </div>
+            @if ($products->hasPages())
+            <div class="m-4">
+                {{ $products->links() }}
+            </div>
+            @endif
         </div>
     </div>
 
