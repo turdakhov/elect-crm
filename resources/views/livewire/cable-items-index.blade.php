@@ -97,7 +97,7 @@ new class extends Component {
                     Экспорт PDF
                 </flux:button>
                 <flux:button variant="primary" color="blue" icon="chart-bar" :href="route('projects.cable-items.summary', $project)">
-                    Сводка
+                    Подсчет
                 </flux:button>
             </div>
         </div>
