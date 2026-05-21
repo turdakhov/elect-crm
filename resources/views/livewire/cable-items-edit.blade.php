@@ -88,12 +88,6 @@ new class extends Component {
                         </flux:field>
 
                         <flux:field>
-                            <flux:label>Название *</flux:label>
-                            <flux:input wire:model="name"></flux:input>
-                            <flux:error name="name" />
-                        </flux:field>
-
-                        <flux:field>
                             <flux:label>Кабель *</flux:label>
                             <flux:select wire:model="cable_id">
                                 @foreach($cables as $cable)
@@ -101,12 +95,6 @@ new class extends Component {
                                 @endforeach
                             </flux:select>
                             <flux:error name="cable_id" />
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:label>Длина кабеля (м) *</flux:label>
-                            <flux:input type="number" step="0.01" wire:model="cable_length"></flux:input>
-                            <flux:error name="cable_length" />
                         </flux:field>
 
                         <flux:field>
@@ -120,8 +108,20 @@ new class extends Component {
                         </flux:field>
 
                         <flux:field>
+                            <flux:label>Название *</flux:label>
+                            <flux:input wire:model="name"></flux:input>
+                            <flux:error name="name" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Длина кабеля (м) *</flux:label>
+                            <flux:input type="text" inputmode="decimal" wire:model="cable_length"></flux:input>
+                            <flux:error name="cable_length" />
+                        </flux:field>
+
+                        <flux:field>
                             <flux:label>Длина гофры (м) *</flux:label>
-                            <flux:input type="number" step="0.01" wire:model="pipe_length"></flux:input>
+                            <flux:input type="text" inputmode="decimal" wire:model="pipe_length"></flux:input>
                             <flux:error name="pipe_length" />
                         </flux:field>
 

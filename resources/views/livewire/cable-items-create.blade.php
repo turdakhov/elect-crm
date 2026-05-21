@@ -11,8 +11,8 @@ new class extends Component {
     public $comment = '';
     public $cable_id;
     public $pipe_id;
-    public $cable_length = 0;
-    public $pipe_length = 0;
+    public $cable_length = '';
+    public $pipe_length = '';
 
     public function mount(?Project $project = null): void
     {
@@ -60,8 +60,8 @@ new class extends Component {
         // Сохраняем этаж, комнату, кабель и гофру для следующей записи
         $this->name = '';
         $this->comment = '';
-        $this->cable_length = 0;
-        $this->pipe_length = 0;
+        $this->cable_length = '';
+        $this->pipe_length = '';
 
         session()->flash('message', 'Позиция успешно добавлена!');
         
@@ -92,12 +92,12 @@ new class extends Component {
                         <form wire:submit="save" class="space-y-6" x-data="{ focusNameField() { setTimeout(() => { const input = document.querySelector('input[wire\\:model=name]'); if(input) input.focus(); }, 100); } }" x-init="$wire.on('item-saved', () => focusNameField())">
                             <flux:input wire:model='floor' label="Этаж" />
                             <flux:input wire:model='room' label="Помещение" />
-                            <flux:textarea wire:model='comment' label="Комментарий" />
                             <x-forms.select name="cable_id" cname="name" label="Кабель" :collection="$cables" with_empty />
                             <x-forms.select name="pipe_id" cname="name" label="Гофра" :collection="$pipes" with_empty />
                             <flux:input wire:model='name' label="Наименование" autofocus=""/>
-                            <flux:input wire:model='cable_length' label="Длина кабеля (м)" type="number" step="0.01" />
-                            <flux:input wire:model='pipe_length' label="Длина гофры (м)" type="number" step="0.01" />
+                            <flux:input wire:model='cable_length' label="Длина кабеля (м)" type="text" inputmode="decimal" />
+                            <flux:input wire:model='pipe_length' label="Длина гофры (м)" type="text" inputmode="decimal" />
+                            <flux:textarea wire:model='comment' label="Комментарий" />
 
                             <div class="flex gap-2">
                                 <flux:button variant="primary" type="submit" icon="plus">Создать и еще один</flux:button>
