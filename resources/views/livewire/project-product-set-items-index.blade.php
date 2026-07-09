@@ -10,7 +10,7 @@ new class extends Component {
     public function with(): array
     {
         return [
-            'items' => $this->projectProductSet->items()->latest()->get(),
+            'items' => $this->projectProductSet->items()->with('product.file')->latest()->get(),
         ];
     }
 
@@ -27,7 +27,11 @@ new class extends Component {
 
     public function exportPdf()
     {
-        $items = $this->projectProductSet->items()->latest()->get()->map(function ($item) {
+        $items = $this->projectProductSet->items()->with('product.file')->latest()->get()->map(function ($item) {
+            if (!$item->product) {
+                return $item;
+            }
+
             if ($item->product->file && $item->product->file->path) {
                 $filePath = storage_path('app/public/' . $item->product->file->path);
                 if (file_exists($filePath)) {
@@ -111,10 +115,14 @@ new class extends Component {
                         <tr wire:key='{{ $item->id }}'
                             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                                @if ($item->product)
                                 {{ $item->product->name }}
+                                @else
+                                <span class="text-gray-400 italic">Товар удалён</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-center">
-                                @if ($item->product->file && $item->product->file->path)
+                                @if ($item->product && $item->product->file && $item->product->file->path)
                                 <button
                                     type="button"
                                     @click="selectedImage = '{{ Storage::url($item->product->file->path) }}'; selectedName = '{{ $item->product->name }}'"
@@ -128,7 +136,7 @@ new class extends Component {
                                 @endif
                             </td>
                             <td class="px-6 py-4">
-                                {{ $item->quantity }} {{ $item->product->unit ?? '' }}
+                                {{ $item->quantity }} {{ $item->product?->unit ?? '' }}
                             </td>
                             <td class="px-6 py-4 text-gray-700 dark:text-gray-200">
                                 {{ $item->comment ?? '—' }}

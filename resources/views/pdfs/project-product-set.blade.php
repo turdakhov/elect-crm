@@ -181,20 +181,24 @@
             <tr>
                 <td class="center">{{ $index + 1 }}</td>
                 <td class="center image-cell">
-                    @if ($item->product->imageBase64)
+                    @if ($item->product && $item->product->imageBase64)
                     <img src="{{ $item->product->imageBase64 }}" alt="{{ $item->product->name }}" class="product-image">
                     @else
                     —
                     @endif
                 </td>
                 <td class="product-cell">
+                    @if ($item->product)
                     <div>{{ $item->product->name }}</div>
                     @if ($item->product->description)
                     <div class="description">{{ $item->product->description }}</div>
                     @endif
+                    @else
+                    <div class="description">Товар удалён</div>
+                    @endif
                 </td>
                 <td class="center">{{ $item->quantity }}</td>
-                <td class="center">{{ $item->product->unit ?? '—' }}</td>
+                <td class="center">{{ $item->product?->unit ?? '—' }}</td>
                 <td>{{ $item->comment ?? '—' }}</td>
             </tr>
             @endforeach
