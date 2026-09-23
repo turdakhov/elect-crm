@@ -9,7 +9,7 @@ use Livewire\WithFileUploads;
 new class extends Component {
     use WithFileUploads;
 
-    private const COLUMN_COUNT = 8;
+    private const COLUMN_COUNT = 9;
 
     public Project $project;
     public $file;
@@ -55,7 +55,7 @@ new class extends Component {
 
         if (count(str_getcsv($headerLine, $delimiter)) < self::COLUMN_COUNT) {
             fclose($handle);
-            $this->addError('file', 'В файле должно быть '.self::COLUMN_COUNT.' столбцов: этаж, комната, название, кабель, кол-во, длина кабеля, гофра, длина гофры.');
+            $this->addError('file', 'В файле должно быть '.self::COLUMN_COUNT.' столбцов: этаж, комната, название, код, кабель, кол-во, длина кабеля, гофра, длина гофры.');
 
             return;
         }
@@ -76,7 +76,7 @@ new class extends Component {
                 continue;
             }
 
-            [$floor, $room, $name, $cableName, $countRaw, $cableLengthRaw, $pipeName, $pipeLengthRaw] = array_map(
+            [$floor, $room, $name, $code, $cableName, $countRaw, $cableLengthRaw, $pipeName, $pipeLengthRaw] = array_map(
                 fn ($value) => trim((string) $value),
                 array_pad(array_slice($row, 0, self::COLUMN_COUNT), self::COLUMN_COUNT, null)
             );
@@ -128,6 +128,7 @@ new class extends Component {
                 'floor' => $floor,
                 'room' => $room,
                 'name' => $name,
+                'code' => $code !== '' ? $code : null,
                 'cable_id' => $cableId,
                 'cable_count' => $cableCount,
                 'pipe_id' => $pipeId,
@@ -227,7 +228,7 @@ new class extends Component {
                         <flux:callout.heading>Формат файла</flux:callout.heading>
                         <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                             <div>Разделитель: точка с запятой (;) или запятая (,), кодировка: UTF-8. Первая строка — заголовки.</div>
-                            <div>Столбцы по порядку: этаж, комната, название, кабель, кол-во кабелей в гофре, длина кабеля (м), гофра, длина гофры (м).</div>
+                            <div>Столбцы по порядку: этаж, комната, название, код (необязательно), кабель, кол-во кабелей в гофре, длина кабеля (м), гофра, длина гофры (м).</div>
                             <div>Кабель и гофра должны совпадать с названиями в справочниках (регистр и ё/е не важны).</div>
                             <div>Пустое кол-во считается как 1. Если в файле есть ошибки, ничего не импортируется.</div>
                         </div>

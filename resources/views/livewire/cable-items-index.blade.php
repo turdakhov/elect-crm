@@ -37,6 +37,7 @@ new class extends Component {
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhere('code', 'like', '%' . $this->search . '%')
                   ->orWhere('room', 'like', '%' . $this->search . '%')
                   ->orWhere('floor', 'like', '%' . $this->search . '%');
             });
@@ -155,6 +156,9 @@ new class extends Component {
                             <td class="px-6 py-4 align-middle">{{ $item->room }}</td>
                             <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white align-middle">
                                 {{ $item->name }}
+                                @if ($item->code)
+                                <span class="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">{{ $item->code }}</span>
+                                @endif
                                 @if ($item->comment)
                                 <div class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">
                                     {{ Str::limit($item->comment, 50) }}

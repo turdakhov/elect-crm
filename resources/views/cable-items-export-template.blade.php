@@ -76,11 +76,15 @@
         }
 
         .cell-name {
-            font-size: 15px;
+            font-size: 14px;
             margin-bottom: 0;
             text-align: center;
             text-transform: uppercase;
             line-height: 1;
+        }
+
+        .cell-code {
+            text-transform: none;
         }
 
         .cell-info {
@@ -154,7 +158,7 @@
                             <td align="right">{{ $item->pipe?->name ?? '' }}</td>
                         </tr>
                     </table>
-                    <div class="cell-name">{{ Str::limit($item->name, 24, '') }}</div>
+                    <div class="cell-name">{{ Str::limit($item->name, 24, '') }}@if($item->code) <span class="cell-code">{{ $item->code }}</span>@endif</div>
                     <div class="cell-info">
                         @if($item->cable)
                         <div class="cell-info-row">

@@ -16,6 +16,7 @@ class CableItem extends Model
         'floor',
         'room',
         'name',
+        'code',
         'comment',
         'cable_id',
         'cable_count',

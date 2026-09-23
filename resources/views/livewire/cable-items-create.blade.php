@@ -8,6 +8,7 @@ new class extends Component {
     public $floor = '';
     public $room = '';
     public $name = '';
+    public $code = '';
     public $comment = '';
     public $cable_id;
     public $cable_count = 1;
@@ -38,6 +39,7 @@ new class extends Component {
             'floor' => 'required|string',
             'room' => 'required|string',
             'name' => 'required|string',
+            'code' => 'nullable|string|max:50',
             'comment' => 'nullable|string',
             'cable_id' => 'nullable|exists:cables,id',
             'cable_count' => 'required|integer|min:1|max:1000',
@@ -51,6 +53,7 @@ new class extends Component {
             'floor' => $this->floor,
             'room' => $this->room,
             'name' => $this->name,
+            'code' => $this->code ?: null,
             'comment' => $this->comment,
             'cable_id' => $this->cable_id,
             'cable_count' => $this->cable_count,
@@ -62,6 +65,7 @@ new class extends Component {
         // Очищаем только наименование, комментарий и длины
         // Сохраняем этаж, комнату, кабель и гофру для следующей записи
         $this->name = '';
+        $this->code = '';
         $this->comment = '';
         $this->cable_length = '';
         $this->pipe_length = '';
@@ -98,6 +102,7 @@ new class extends Component {
                             <x-forms.select name="cable_id" cname="name" label="Кабель" :collection="$cables" with_empty />
                             <x-forms.select name="pipe_id" cname="name" label="Гофра" :collection="$pipes" with_empty />
                             <flux:input wire:model='name' label="Наименование" autofocus=""/>
+                            <flux:input wire:model='code' label="Код" />
                             <flux:input wire:model='cable_length' label="Длина кабеля (м)" type="text" inputmode="decimal" />
                             <flux:input wire:model='cable_count' label="Кол-во кабелей в гофре" type="text" inputmode="numeric" />
                             <flux:input wire:model='pipe_length' label="Длина гофры (м)" type="text" inputmode="decimal" />

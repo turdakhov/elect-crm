@@ -8,6 +8,7 @@ new class extends Component {
     public $floor;
     public $room;
     public $name;
+    public $code;
     public $comment;
     public $cable_id;
     public $cable_count;
@@ -21,6 +22,7 @@ new class extends Component {
         $this->floor = $cableItem->floor;
         $this->room = $cableItem->room;
         $this->name = $cableItem->name;
+        $this->code = $cableItem->code;
         $this->comment = $cableItem->comment;
         $this->cable_id = $cableItem->cable_id;
         $this->cable_count = $cableItem->cable_count;
@@ -42,6 +44,7 @@ new class extends Component {
         $this->validate([
             'room' => 'required|string|max:255',
             'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:50',
             'floor' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
             'cable_id' => 'required|exists:cables,id',
@@ -55,6 +58,7 @@ new class extends Component {
             'floor' => $this->floor,
             'room' => $this->room,
             'name' => $this->name,
+            'code' => $this->code ?: null,
             'comment' => $this->comment,
             'cable_id' => $this->cable_id,
             'cable_count' => $this->cable_count,
@@ -115,6 +119,12 @@ new class extends Component {
                             <flux:label>Название *</flux:label>
                             <flux:input wire:model="name"></flux:input>
                             <flux:error name="name" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Код</flux:label>
+                            <flux:input wire:model="code"></flux:input>
+                            <flux:error name="code" />
                         </flux:field>
 
                         <flux:field>
