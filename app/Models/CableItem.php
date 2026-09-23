@@ -18,6 +18,7 @@ class CableItem extends Model
         'name',
         'comment',
         'cable_id',
+        'cable_count',
         'pipe_id',
         'cable_length',
         'pipe_length',
@@ -26,6 +27,7 @@ class CableItem extends Model
     public function casts(): array
     {
         return [
+            'cable_count' => 'integer',
             'cable_length' => 'float',
             'pipe_length' => 'float',
         ];

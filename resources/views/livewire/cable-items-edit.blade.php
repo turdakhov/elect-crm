@@ -10,6 +10,7 @@ new class extends Component {
     public $name;
     public $comment;
     public $cable_id;
+    public $cable_count;
     public $pipe_id;
     public $cable_length;
     public $pipe_length;
@@ -22,6 +23,7 @@ new class extends Component {
         $this->name = $cableItem->name;
         $this->comment = $cableItem->comment;
         $this->cable_id = $cableItem->cable_id;
+        $this->cable_count = $cableItem->cable_count;
         $this->pipe_id = $cableItem->pipe_id;
         $this->cable_length = $cableItem->cable_length;
         $this->pipe_length = $cableItem->pipe_length;
@@ -43,6 +45,7 @@ new class extends Component {
             'floor' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
             'cable_id' => 'required|exists:cables,id',
+            'cable_count' => 'required|integer|min:1|max:1000',
             'pipe_id' => 'required|exists:pipes,id',
             'cable_length' => 'required|numeric|min:0',
             'pipe_length' => 'required|numeric|min:0',
@@ -54,6 +57,7 @@ new class extends Component {
             'name' => $this->name,
             'comment' => $this->comment,
             'cable_id' => $this->cable_id,
+            'cable_count' => $this->cable_count,
             'pipe_id' => $this->pipe_id,
             'cable_length' => $this->cable_length,
             'pipe_length' => $this->pipe_length,
@@ -117,6 +121,12 @@ new class extends Component {
                             <flux:label>Длина кабеля (м) *</flux:label>
                             <flux:input type="text" inputmode="decimal" wire:model="cable_length"></flux:input>
                             <flux:error name="cable_length" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Кол-во кабелей в гофре *</flux:label>
+                            <flux:input type="text" inputmode="numeric" wire:model="cable_count"></flux:input>
+                            <flux:error name="cable_count" />
                         </flux:field>
 
                         <flux:field>

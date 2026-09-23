@@ -10,6 +10,7 @@ new class extends Component {
     public $name = '';
     public $comment = '';
     public $cable_id;
+    public $cable_count = 1;
     public $pipe_id;
     public $cable_length = '';
     public $pipe_length = '';
@@ -39,6 +40,7 @@ new class extends Component {
             'name' => 'required|string',
             'comment' => 'nullable|string',
             'cable_id' => 'nullable|exists:cables,id',
+            'cable_count' => 'required|integer|min:1|max:1000',
             'pipe_id' => 'nullable|exists:pipes,id',
             'cable_length' => 'nullable|numeric|min:0',
             'pipe_length' => 'nullable|numeric|min:0',
@@ -51,6 +53,7 @@ new class extends Component {
             'name' => $this->name,
             'comment' => $this->comment,
             'cable_id' => $this->cable_id,
+            'cable_count' => $this->cable_count,
             'pipe_id' => $this->pipe_id,
             'cable_length' => $this->cable_length,
             'pipe_length' => $this->pipe_length,
@@ -96,6 +99,7 @@ new class extends Component {
                             <x-forms.select name="pipe_id" cname="name" label="Гофра" :collection="$pipes" with_empty />
                             <flux:input wire:model='name' label="Наименование" autofocus=""/>
                             <flux:input wire:model='cable_length' label="Длина кабеля (м)" type="text" inputmode="decimal" />
+                            <flux:input wire:model='cable_count' label="Кол-во кабелей в гофре" type="text" inputmode="numeric" />
                             <flux:input wire:model='pipe_length' label="Длина гофры (м)" type="text" inputmode="decimal" />
                             <flux:textarea wire:model='comment' label="Комментарий" />
 

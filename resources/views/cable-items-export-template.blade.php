@@ -109,6 +109,11 @@
             font-weight: bold;
         }
 
+        .cell-count {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
         .cell-bottom {
             font-size: 0;
             text-align: center;
@@ -157,7 +162,7 @@
                         </div>
                         @endif
                         <div class="cell-info-row">
-                            <span class="cell-length">{{ number_format((float)($item->cable_length ?? 0), 1, '.', '') }}</span>
+                            <span class="cell-length">{{ number_format((float)($item->cable_length ?? 0), 1, '.', '') }}</span>@if($item->cable_count > 1)<span class="cell-count">x{{ $item->cable_count }}</span>@endif
                         </div>
                         @if($item->pipe)
                         <div class="cell-info-row">

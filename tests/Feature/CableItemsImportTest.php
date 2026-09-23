@@ -8,87 +8,113 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Livewire\Volt\Volt;
 
-it('imports cable items from csv', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
+const IMPORT_HEADER = "Этаж;Комната;Название;Кабель;Кол-во;Длина кабеля, м;Гофра;Длина гофры, м\n";
 
-    $project = Project::factory()->create();
-    $pipe = Pipe::factory()->create(['name' => 'Гофра 16']);
-    $cableA = Cable::factory()->create(['name' => '3x2.5']);
-    $cableB = Cable::factory()->create(['name' => 'UTP']);
+beforeEach(function () {
+    $this->actingAs(User::factory()->create());
+    $this->project = Project::factory()->create();
+});
 
-    $content = ";;;гофра;3x2.5;UTP\n".
-        "Цоколь;Кинотеатр;Ввод свет;9,6;12,6;\n".
-        "Цоколь;Кинотеатр;UTP точка;1,2;;5,5\n";
+function importCsv(Project $project, string $content): \Livewire\Features\SupportTesting\Testable
+{
+    return Volt::test('cable-items-import', ['project' => $project])
+        ->set('file', UploadedFile::fake()->createWithContent('import.csv', $content))
+        ->call('import');
+}
 
-    $file = UploadedFile::fake()->createWithContent('import.csv', $content);
+it('imports rows with cable, count and pipe from each row', function () {
+    $cableLight = Cable::factory()->create(['name' => '3*1,5']);
+    $cableUtp = Cable::factory()->create(['name' => 'UTP']);
+    $pipe = Pipe::factory()->create(['name' => 'd20 черная']);
 
-    Volt::test('cable-items-import', ['project' => $project])
-        ->set('pipe_id', $pipe->id)
-        ->set('file', $file)
-        ->call('import')
-        ->assertHasNoErrors();
+    $content = "\xEF\xBB\xBF".IMPORT_HEADER.
+        "2 этаж;Гостевая спальня;ввод свет;3*1,5;1;10,57;d20 чёрная;8,57\n".
+        "2 этаж;Гостевая спальня;выкл у входа;UTP;4;11,08;D20 Чёрная;6,88\n".
+        ";;;;;;;\n";
 
-    $items = CableItem::where('project_id', $project->id)->get();
+    importCsv($this->project, $content)->assertHasNoErrors();
+
+    $items = CableItem::where('project_id', $this->project->id)->get();
     expect($items)->toHaveCount(2);
 
-    $first = $items->firstWhere('cable_id', $cableA->id);
-    $second = $items->firstWhere('cable_id', $cableB->id);
+    $light = $items->firstWhere('cable_id', $cableLight->id);
+    expect($light->floor)->toBe('2 этаж')
+        ->and($light->room)->toBe('Гостевая спальня')
+        ->and($light->name)->toBe('ввод свет')
+        ->and($light->cable_count)->toBe(1)
+        ->and($light->cable_length)->toBe(10.57)
+        ->and($light->pipe_id)->toBe($pipe->id)
+        ->and($light->pipe_length)->toBe(8.57);
 
-    expect($first)->not->toBeNull();
-    expect($first->cable_length)->toBe(12.6);
-    expect($first->pipe_length)->toBe(9.6);
-
-    expect($second)->not->toBeNull();
-    expect($second->cable_length)->toBe(5.5);
-    expect($second->pipe_length)->toBe(1.2);
+    $utp = $items->firstWhere('cable_id', $cableUtp->id);
+    expect($utp->cable_count)->toBe(4)
+        ->and($utp->cable_length)->toBe(11.08)
+        ->and($utp->pipe_id)->toBe($pipe->id);
 });
 
-it('rejects csv when cable header is missing', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
+it('treats empty count as one and empty pipe length as zero', function () {
+    Cable::factory()->create(['name' => 'UTP']);
+    Pipe::factory()->create(['name' => 'd20 черная']);
 
-    $project = Project::factory()->create();
-    $pipe = Pipe::factory()->create(['name' => 'Гофра 16']);
+    importCsv($this->project, IMPORT_HEADER."1 этаж;Холл;WiFi;UTP;;10;d20 черная;\n")->assertHasNoErrors();
 
-    $content = ";;;гофра;MissingCable\n".
-        "Цоколь;Кинотеатр;Ввод свет;9,6;12,6\n";
+    $item = CableItem::where('project_id', $this->project->id)->sole();
+    expect($item->cable_count)->toBe(1)
+        ->and($item->pipe_length)->toBe(0.0);
+});
 
-    $file = UploadedFile::fake()->createWithContent('import.csv', $content);
+it('rejects the whole file and lists cables and pipes missing from catalogs', function () {
+    Cable::factory()->create(['name' => '3*1,5']);
+    Pipe::factory()->create(['name' => 'd20 черная']);
 
-    Volt::test('cable-items-import', ['project' => $project])
-        ->set('pipe_id', $pipe->id)
-        ->set('file', $file)
-        ->call('import')
+    $content = IMPORT_HEADER.
+        "2 этаж;Спальня;люстра;3*1,5;1;2,86;d20 черная;1,86\n".
+        "2 этаж;Спальня;штора;5*0,75;1;12,60;d20 черная;11,40\n".
+        "2 этаж;Спальня;штора 2;5*0,75;1;11,85;d32 синяя;9,65\n";
+
+    importCsv($this->project, $content)
+        ->assertHasErrors(['file'])
+        ->assertSee('Кабели не найдены в справочнике: 5*0,75.')
+        ->assertSee('Гофры не найдены в справочнике: d32 синяя.');
+
+    expect(CableItem::where('project_id', $this->project->id)->count())->toBe(0);
+});
+
+it('rejects invalid count and length values', function (string $row, string $message) {
+    Cable::factory()->create(['name' => 'UTP']);
+    Pipe::factory()->create(['name' => 'd20 черная']);
+
+    importCsv($this->project, IMPORT_HEADER.$row."\n")
+        ->assertHasErrors(['file'])
+        ->assertSee($message);
+
+    expect(CableItem::count())->toBe(0);
+})->with([
+    'zero count' => ['1;Холл;WiFi;UTP;0;10;d20 черная;5', 'Строка 2: некорректное количество кабелей.'],
+    'fractional count' => ['1;Холл;WiFi;UTP;1,5;10;d20 черная;5', 'Строка 2: некорректное количество кабелей.'],
+    'empty cable length' => ['1;Холл;WiFi;UTP;1;;d20 черная;5', 'Строка 2: некорректная длина кабеля.'],
+    'text pipe length' => ['1;Холл;WiFi;UTP;1;10;d20 черная;abc', 'Строка 2: некорректная длина гофры.'],
+    'missing room' => ['1;;WiFi;UTP;1;10;d20 черная;5', 'Строка 2: заполните этаж, комнату и название.'],
+]);
+
+it('rejects file with too few columns', function () {
+    importCsv($this->project, ";;;гофра;3x2.5;UTP\nЦоколь;Кинотеатр;Ввод свет;9,6;12,6;\n")
         ->assertHasErrors(['file']);
 
-    expect(CableItem::where('project_id', $project->id)->count())->toBe(0);
+    expect(CableItem::count())->toBe(0);
 });
 
-it('imports comma delimited csv with quoted decimal values', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
+it('imports comma delimited csv with quoted decimals', function () {
+    $cable = Cable::factory()->create(['name' => '3*2,5']);
+    Pipe::factory()->create(['name' => 'd20 черная']);
 
-    $project = Project::factory()->create();
-    $pipe = Pipe::factory()->create(['name' => 'Гофра 16']);
-    $cable = Cable::factory()->create(['name' => '3x2.5']);
+    $content = "Этаж,Комната,Название,Кабель,Кол-во,Длина кабеля,Гофра,Длина гофры\n".
+        "Цоколь,Кинотеатр,Розетка,\"3*2,5\",2,\"4,5\",d20 черная,\"3,5\"\n";
 
-    $content = ",,,гофра,3x2.5\n".
-        "Цоколь,Кинотеатр,Розетка у входа,\"3,5\",\"4,5\"\n";
+    importCsv($this->project, $content)->assertHasNoErrors();
 
-    $file = UploadedFile::fake()->createWithContent('import.csv', $content);
-
-    Volt::test('cable-items-import', ['project' => $project])
-        ->set('pipe_id', $pipe->id)
-        ->set('file', $file)
-        ->call('import')
-        ->assertHasNoErrors();
-
-    $item = CableItem::where('project_id', $project->id)
-        ->where('cable_id', $cable->id)
-        ->first();
-
-    expect($item)->not->toBeNull();
-    expect($item->pipe_length)->toBe(3.5);
-    expect($item->cable_length)->toBe(4.5);
+    $item = CableItem::where('cable_id', $cable->id)->sole();
+    expect($item->cable_count)->toBe(2)
+        ->and($item->cable_length)->toBe(4.5)
+        ->and($item->pipe_length)->toBe(3.5);
 });

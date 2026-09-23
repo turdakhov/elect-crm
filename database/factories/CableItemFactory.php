@@ -29,6 +29,7 @@ class CableItemFactory extends Factory
             'name' => $this->faker->words(3, true),
             'comment' => $this->faker->optional()->sentence(),
             'cable_id' => Cable::query()->inRandomOrder()->value('id') ?? Cable::factory()->create()->id,
+            'cable_count' => 1,
             'pipe_id' => Pipe::query()->inRandomOrder()->value('id') ?? Pipe::factory()->create()->id,
             'cable_length' => $this->faker->randomFloat(2, 1, 100),
             'pipe_length' => $this->faker->randomFloat(2, 1, 100),

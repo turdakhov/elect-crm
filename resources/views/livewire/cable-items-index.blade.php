@@ -162,7 +162,12 @@ new class extends Component {
                                 @endif
                             </th>
                             <td class="px-6 py-4 align-middle">{{ $item->cable->name }}</td>
-                            <td class="px-6 py-4 align-middle">{{ number_format($item->cable_length, 2) }} м</td>
+                            <td class="px-6 py-4 align-middle whitespace-nowrap">
+                                {{ number_format($item->cable_length, 2) }} м
+                                @if ($item->cable_count > 1)
+                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">×{{ $item->cable_count }}</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 align-middle">{{ $item->pipe->name }}</td>
                             <td class="px-6 py-4 align-middle">{{ number_format($item->pipe_length, 2) }} м</td>
                             <td class="px-6 py-4 align-middle">

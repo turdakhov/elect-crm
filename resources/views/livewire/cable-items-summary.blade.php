@@ -22,7 +22,7 @@ new class extends Component {
             ->map(fn ($items) => [
                 'name' => $items->first()->cable?->name ?? '—',
                 'count' => $items->count(),
-                'length' => $items->sum('cable_length'),
+                'length' => $items->sum(fn (CableItem $item) => $item->cable_length * $item->cable_count),
             ])
             ->values();
 
@@ -49,7 +49,7 @@ new class extends Component {
                 'items' => $itemsByFloor->groupBy('cable_id')->map(fn ($items) => [
                     'name' => $items->first()->cable?->name ?? '—',
                     'count' => $items->count(),
-                    'length' => $items->sum('cable_length'),
+                    'length' => $items->sum(fn (CableItem $item) => $item->cable_length * $item->cable_count),
                 ])->values(),
             ])
             ->values();

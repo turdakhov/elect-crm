@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\{Cable, CableItem, Pipe, Project};
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
@@ -8,9 +9,10 @@ use Livewire\WithFileUploads;
 new class extends Component {
     use WithFileUploads;
 
+    private const COLUMN_COUNT = 8;
+
     public Project $project;
     public $file;
-    public ?int $pipe_id = null;
     public int $importedCount = 0;
 
     public function mount(Project $project): void
@@ -18,37 +20,20 @@ new class extends Component {
         $this->project = $project;
     }
 
-    public function with(): array
-    {
-        return [
-            'pipes' => Pipe::query()->orderBy('name')->get(),
-        ];
-    }
-
     public function import(): void
     {
         $this->resetValidation();
 
         $this->validate([
-            'pipe_id' => 'required|exists:pipes,id',
             'file' => 'required|file|mimes:csv,txt|max:10240',
         ], [
-            'pipe_id.required' => 'Выберите гофру.',
-            'pipe_id.exists' => 'Выбранная гофра не найдена.',
             'file.required' => 'Выберите CSV файл.',
             'file.mimes' => 'Файл должен быть в формате CSV.',
             'file.max' => 'Размер файла не должен превышать 10 МБ.',
         ]);
 
         $path = $this->file->getRealPath();
-
-        if (! $path) {
-            $this->addError('file', 'Не удалось прочитать файл.');
-
-            return;
-        }
-
-        $handle = fopen($path, 'r');
+        $handle = $path ? fopen($path, 'r') : false;
 
         if ($handle === false) {
             $this->addError('file', 'Не удалось открыть файл.');
@@ -66,64 +51,22 @@ new class extends Component {
         }
 
         $headerLine = preg_replace('/^\xEF\xBB\xBF/', '', $headerLine);
-        $semicolonCount = substr_count($headerLine, ';');
-        $commaCount = substr_count($headerLine, ',');
+        $delimiter = substr_count($headerLine, ';') >= substr_count($headerLine, ',') ? ';' : ',';
 
-        if ($semicolonCount === 0 && $commaCount === 0) {
+        if (count(str_getcsv($headerLine, $delimiter)) < self::COLUMN_COUNT) {
             fclose($handle);
-            $this->addError('file', 'Не удалось определить разделитель CSV.');
+            $this->addError('file', 'В файле должно быть '.self::COLUMN_COUNT.' столбцов: этаж, комната, название, кабель, кол-во, длина кабеля, гофра, длина гофры.');
 
             return;
         }
 
-        $delimiter = $semicolonCount >= $commaCount ? ';' : ',';
-        $header = str_getcsv($headerLine, $delimiter);
-
-        if (! is_array($header) || count($header) < 5) {
-            fclose($handle);
-            $this->addError('file', 'В файле не найдены заголовки с типами кабеля.');
-
-            return;
-        }
-
-        $cablesByName = Cable::query()->pluck('id', 'name');
-        $cableColumns = [];
-        $missing = [];
-        $headerCount = count($header);
-
-        for ($i = 4; $i < $headerCount; $i++) {
-            $cableName = trim((string) ($header[$i] ?? ''));
-
-            if ($cableName === '') {
-                continue;
-            }
-
-            $cableId = $cablesByName->get($cableName);
-
-            if (! $cableId) {
-                $missing[] = $cableName;
-                continue;
-            }
-
-            $cableColumns[$i] = $cableId;
-        }
-
-        if ($missing) {
-            fclose($handle);
-            $this->addError('file', 'Типы кабеля не найдены: ' . implode(', ', $missing));
-
-            return;
-        }
-
-        if (! $cableColumns) {
-            fclose($handle);
-            $this->addError('file', 'В файле нет заголовков с типами кабеля.');
-
-            return;
-        }
+        $cablesByName = $this->catalogByName(Cable::query()->pluck('id', 'name'));
+        $pipesByName = $this->catalogByName(Pipe::query()->pluck('id', 'name'));
 
         $entries = [];
         $errors = [];
+        $missingCables = [];
+        $missingPipes = [];
         $rowNumber = 1;
 
         while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
@@ -133,13 +76,10 @@ new class extends Component {
                 continue;
             }
 
-            $row = array_pad($row, $headerCount, null);
-
-            $floor = trim((string) ($row[0] ?? ''));
-            $room = trim((string) ($row[1] ?? ''));
-            $name = trim((string) ($row[2] ?? ''));
-            $pipeLengthRaw = trim((string) ($row[3] ?? ''));
-            $pipeLength = $this->parseDecimal($pipeLengthRaw);
+            [$floor, $room, $name, $cableName, $countRaw, $cableLengthRaw, $pipeName, $pipeLengthRaw] = array_map(
+                fn ($value) => trim((string) $value),
+                array_pad(array_slice($row, 0, self::COLUMN_COUNT), self::COLUMN_COUNT, null)
+            );
 
             if ($floor === '' || $room === '' || $name === '') {
                 $errors[] = "Строка {$rowNumber}: заполните этаж, комнату и название.";
@@ -147,42 +87,64 @@ new class extends Component {
                 continue;
             }
 
-            if ($pipeLengthRaw !== '' && $pipeLength === null) {
-                $errors[] = "Строка {$rowNumber}: некорректная длина гофры.";
+            $cableId = $cablesByName->get($this->normalizeName($cableName));
+            $pipeId = $pipesByName->get($this->normalizeName($pipeName));
 
+            if ($cableName === '') {
+                $errors[] = "Строка {$rowNumber}: не указан кабель.";
+            } elseif (! $cableId) {
+                $missingCables[$cableName] = true;
+            }
+
+            if ($pipeName === '') {
+                $errors[] = "Строка {$rowNumber}: не указана гофра.";
+            } elseif (! $pipeId) {
+                $missingPipes[$pipeName] = true;
+            }
+
+            $cableCount = $countRaw === '' ? 1 : filter_var($countRaw, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 1000]]);
+
+            if ($cableCount === false) {
+                $errors[] = "Строка {$rowNumber}: некорректное количество кабелей.";
+            }
+
+            $cableLength = $this->parseDecimal($cableLengthRaw);
+            $pipeLength = $pipeLengthRaw === '' ? 0.0 : $this->parseDecimal($pipeLengthRaw);
+
+            if ($cableLength === null) {
+                $errors[] = "Строка {$rowNumber}: некорректная длина кабеля.";
+            }
+
+            if ($pipeLength === null) {
+                $errors[] = "Строка {$rowNumber}: некорректная длина гофры.";
+            }
+
+            if (! $cableId || ! $pipeId || $cableCount === false || $cableLength === null || $pipeLength === null) {
                 continue;
             }
 
-            foreach ($cableColumns as $index => $cableId) {
-                $cableLengthRaw = trim((string) ($row[$index] ?? ''));
-
-                if ($cableLengthRaw === '') {
-                    continue;
-                }
-
-                $cableLength = $this->parseDecimal($cableLengthRaw);
-
-                if ($cableLength === null) {
-                    $columnNumber = $index + 1;
-                    $errors[] = "Строка {$rowNumber}: некорректная длина кабеля в колонке {$columnNumber}.";
-
-                    continue;
-                }
-
-                $entries[] = [
-                    'project_id' => $this->project->id,
-                    'floor' => $floor,
-                    'room' => $room,
-                    'name' => $name,
-                    'cable_id' => $cableId,
-                    'pipe_id' => $this->pipe_id,
-                    'cable_length' => $cableLength,
-                    'pipe_length' => $pipeLength ?? 0,
-                ];
-            }
+            $entries[] = [
+                'project_id' => $this->project->id,
+                'floor' => $floor,
+                'room' => $room,
+                'name' => $name,
+                'cable_id' => $cableId,
+                'cable_count' => $cableCount,
+                'pipe_id' => $pipeId,
+                'cable_length' => $cableLength,
+                'pipe_length' => $pipeLength,
+            ];
         }
 
         fclose($handle);
+
+        if ($missingCables) {
+            array_unshift($errors, 'Кабели не найдены в справочнике: '.implode(', ', array_keys($missingCables)).'.');
+        }
+
+        if ($missingPipes) {
+            array_unshift($errors, 'Гофры не найдены в справочнике: '.implode(', ', array_keys($missingPipes)).'.');
+        }
 
         if ($errors) {
             $this->addError('file', implode(' ', $errors));
@@ -208,18 +170,28 @@ new class extends Component {
         session()->flash('message', "Импортировано позиций: {$this->importedCount}.");
     }
 
-    protected function parseDecimal(?string $value): ?float
+    /**
+     * @param  Collection<string, int>  $catalog
+     * @return Collection<string, int>
+     */
+    protected function catalogByName(Collection $catalog): Collection
     {
-        $value = trim((string) $value);
+        return $catalog->mapWithKeys(fn (int $id, string $name) => [$this->normalizeName($name) => $id]);
+    }
 
-        if ($value === '') {
-            return null;
-        }
+    protected function normalizeName(string $name): string
+    {
+        $name = mb_strtolower(trim($name));
+        $name = str_replace('ё', 'е', $name);
 
-        $normalized = preg_replace('/\s+/', '', $value);
-        $normalized = str_replace(',', '.', $normalized ?? '');
+        return (string) preg_replace('/\s+/u', ' ', $name);
+    }
 
-        if ($normalized === '' || ! is_numeric($normalized)) {
+    protected function parseDecimal(string $value): ?float
+    {
+        $normalized = str_replace(',', '.', (string) preg_replace('/\s+/u', '', $value));
+
+        if ($normalized === '' || ! is_numeric($normalized) || (float) $normalized < 0) {
             return null;
         }
 
@@ -254,10 +226,10 @@ new class extends Component {
                     <flux:callout icon="information-circle">
                         <flux:callout.heading>Формат файла</flux:callout.heading>
                         <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                            <div>Разделитель: точка с запятой (;) или запятая (,), кодировка: UTF-8.</div>
-                            <div>Столбцы A-D: этаж, комната, название, длина гофры.</div>
-                            <div>Начиная с 5-го столбца: названия кабелей (как в справочнике кабелей).</div>
-                            <div>Импорт создаст строки только по заполненным длинам кабелей.</div>
+                            <div>Разделитель: точка с запятой (;) или запятая (,), кодировка: UTF-8. Первая строка — заголовки.</div>
+                            <div>Столбцы по порядку: этаж, комната, название, кабель, кол-во кабелей в гофре, длина кабеля (м), гофра, длина гофры (м).</div>
+                            <div>Кабель и гофра должны совпадать с названиями в справочниках (регистр и ё/е не важны).</div>
+                            <div>Пустое кол-во считается как 1. Если в файле есть ошибки, ничего не импортируется.</div>
                         </div>
                     </flux:callout>
 
@@ -268,17 +240,6 @@ new class extends Component {
                     @endif
 
                     <form wire:submit="import" class="space-y-6">
-                        <flux:field>
-                            <flux:label>Гофра</flux:label>
-                            <flux:select wire:model="pipe_id">
-                                <option value="">Не выбрано</option>
-                                @foreach($pipes as $pipe)
-                                    <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
-                                @endforeach
-                            </flux:select>
-                            <flux:error name="pipe_id" />
-                        </flux:field>
-
                         <div>
                             <label for="file" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CSV файл</label>
                             <input
@@ -297,7 +258,7 @@ new class extends Component {
                         </div>
 
                         <div class="flex gap-2">
-                            <flux:button variant="primary" color="blue" icon="arrow-up-tray" type="submit">Импортировать</flux:button>
+                            <flux:button variant="primary" color="blue" icon="arrow-up-tray" type="submit" wire:loading.attr="disabled" wire:target="import,file">Импортировать</flux:button>
                         </div>
                     </form>
                 </div>
