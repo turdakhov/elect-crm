@@ -112,3 +112,17 @@ it('shows cable count on pdf labels only when greater than one', function () {
         ->and($html)->not->toContain('x1<')
         ->and($html)->toContain('<div class="cell-name">подвес у двери <span class="cell-code">c121</span></div>');
 });
+
+it('deletes all cable items of the project only', function () {
+    $otherProject = Project::factory()->create();
+    CableItem::factory()->count(3)->create(['project_id' => $this->project->id]);
+    CableItem::factory()->count(2)->create(['project_id' => $otherProject->id]);
+
+    Volt::test('cable-items-index', ['project' => $this->project])
+        ->assertSee('Удалить все')
+        ->call('deleteAll')
+        ->assertDontSee('Удалить все');
+
+    expect(CableItem::where('project_id', $this->project->id)->count())->toBe(0)
+        ->and(CableItem::where('project_id', $otherProject->id)->count())->toBe(2);
+});

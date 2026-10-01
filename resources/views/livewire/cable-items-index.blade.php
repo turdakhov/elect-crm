@@ -70,6 +70,14 @@ new class extends Component {
         session()->flash('message', 'Позиция удалена!');
     }
 
+    public function deleteAll(): void
+    {
+        $deletedCount = CableItem::where('project_id', $this->project->id)->delete();
+
+        $this->resetPage();
+        session()->flash('message', "Удалено позиций: {$deletedCount}.");
+    }
+
 }; ?>
 
 <div>
@@ -97,6 +105,12 @@ new class extends Component {
                 <flux:button variant="primary" color="blue" icon="chart-bar" :href="route('projects.cable-items.summary', $project)">
                     Подсчет
                 </flux:button>
+                @if ($cableItems->total() > 0)
+                <flux:button variant="danger" icon="trash" wire:click="deleteAll"
+                    wire:confirm="Удалить ВСЕ кабели проекта «{{ $project->name }}» ({{ $cableItems->total() }} шт.)? Отменить будет нельзя.">
+                    Удалить все
+                </flux:button>
+                @endif
             </div>
         </div>
 
