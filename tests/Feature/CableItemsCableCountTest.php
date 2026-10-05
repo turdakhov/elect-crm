@@ -120,9 +120,32 @@ it('deletes all cable items of the project only', function () {
 
     Volt::test('cable-items-index', ['project' => $this->project])
         ->assertSee('Удалить все')
-        ->call('deleteAll')
+        ->assertViewHas('deleteCount', 3)
+        ->call('deleteCables')
         ->assertDontSee('Удалить все');
 
     expect(CableItem::where('project_id', $this->project->id)->count())->toBe(0)
         ->and(CableItem::where('project_id', $otherProject->id)->count())->toBe(2);
+});
+
+it('deletes cable items of selected floor only', function () {
+    $otherProject = Project::factory()->create();
+    CableItem::factory()->count(3)->create(['project_id' => $this->project->id, 'floor' => '1 этаж']);
+    CableItem::factory()->count(2)->create(['project_id' => $this->project->id, 'floor' => '2 этаж']);
+    CableItem::factory()->create(['project_id' => $otherProject->id, 'floor' => '1 этаж']);
+
+    Volt::test('cable-items-index', ['project' => $this->project])
+        ->set('floorFilter', '1 этаж')
+        ->set('exportFloor', '2 этаж')
+        ->set('deleteFloor', '1 этаж')
+        ->assertSee('Удалить этаж')
+        ->assertViewHas('deleteCount', 3)
+        ->call('deleteCables')
+        ->assertSet('deleteFloor', '')
+        ->assertSet('floorFilter', '')
+        ->assertSet('exportFloor', '2 этаж')
+        ->assertSee('Удалено позиций на этаже «1 этаж»: 3.');
+
+    expect(CableItem::where('project_id', $this->project->id)->pluck('floor')->unique()->values()->all())->toBe(['2 этаж'])
+        ->and(CableItem::where('project_id', $otherProject->id)->count())->toBe(1);
 });

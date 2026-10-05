@@ -12,6 +12,7 @@ new class extends Component {
     public string $search = '';
     public string $floorFilter = '';
     public string $exportFloor = '';
+    public string $deleteFloor = '';
 
     public function mount(Project $project)
     {
@@ -61,6 +62,9 @@ new class extends Component {
         return [
             'cableItems' => $query->paginate(15),
             'floors' => $floors,
+            'deleteCount' => CableItem::where('project_id', $this->project->id)
+                ->when($this->deleteFloor !== '', fn ($query) => $query->where('floor', $this->deleteFloor))
+                ->count(),
         ];
     }
 
@@ -70,12 +74,27 @@ new class extends Component {
         session()->flash('message', 'Позиция удалена!');
     }
 
-    public function deleteAll(): void
+    public function deleteCables(): void
     {
-        $deletedCount = CableItem::where('project_id', $this->project->id)->delete();
+        $floor = $this->deleteFloor;
 
+        $deletedCount = CableItem::where('project_id', $this->project->id)
+            ->when($floor !== '', fn ($query) => $query->where('floor', $floor))
+            ->delete();
+
+        if ($floor === '' || $this->floorFilter === $floor) {
+            $this->floorFilter = '';
+        }
+
+        if ($floor === '' || $this->exportFloor === $floor) {
+            $this->exportFloor = '';
+        }
+
+        $this->deleteFloor = '';
         $this->resetPage();
-        session()->flash('message', "Удалено позиций: {$deletedCount}.");
+
+        $scope = $floor === '' ? 'во всех этажах' : "на этаже «{$floor}»";
+        session()->flash('message', "Удалено позиций {$scope}: {$deletedCount}.");
     }
 
 }; ?>
@@ -105,10 +124,18 @@ new class extends Component {
                 <flux:button variant="primary" color="blue" icon="chart-bar" :href="route('projects.cable-items.summary', $project)">
                     Подсчет
                 </flux:button>
-                @if ($cableItems->total() > 0)
-                <flux:button variant="danger" icon="trash" wire:click="deleteAll"
-                    wire:confirm="Удалить ВСЕ кабели проекта «{{ $project->name }}» ({{ $cableItems->total() }} шт.)? Отменить будет нельзя.">
-                    Удалить все
+                @if ($floors->isNotEmpty() || $deleteCount > 0)
+                <div class="min-w-[180px]">
+                    <flux:select wire:model.live="deleteFloor" aria-label="Этаж для удаления">
+                        <option value="">Все этажи</option>
+                        @foreach($floors as $floor)
+                            <option value="{{ $floor }}">{{ $floor }}</option>
+                        @endforeach
+                    </flux:select>
+                </div>
+                <flux:button variant="danger" icon="trash" wire:click="deleteCables"
+                    wire:confirm="{{ $deleteFloor === '' ? 'Удалить ВСЕ кабели проекта «'.$project->name.'»' : 'Удалить кабели этажа «'.$deleteFloor.'»' }} ({{ $deleteCount }} шт.)? Отменить будет нельзя.">
+                    {{ $deleteFloor === '' ? 'Удалить все' : 'Удалить этаж' }}
                 </flux:button>
                 @endif
             </div>
