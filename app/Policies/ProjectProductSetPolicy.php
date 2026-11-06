@@ -24,12 +24,12 @@ class ProjectProductSetPolicy
 
     public function update(User $user, ProjectProductSet $projectProductSet): bool
     {
-        return true;
+        return ! $projectProductSet->isLocked();
     }
 
     public function delete(User $user, ProjectProductSet $projectProductSet): bool
     {
-        return true;
+        return ! $projectProductSet->isLocked();
     }
 
     public function restore(User $user, ProjectProductSet $projectProductSet): bool

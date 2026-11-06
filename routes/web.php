@@ -83,6 +83,12 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
         ->name('projects.cable-items.export-pdf');
     Volt::route('projects/{project}/cable-items/summary', 'cable-items-summary')->name('projects.cable-items.summary');
     Volt::route('cable-items/{cableItem}/edit', 'cable-items-edit')->name('cable-items.edit');
+
+    // 3D-план: отправки, версии журнала, ключи → товары
+    Volt::route('projects/{project}/plan-syncs', 'plan-syncs-index')->name('projects.plan-syncs.index');
+    Volt::route('plan-syncs/{planSync}', 'plan-syncs-show')->name('plan-syncs.show');
+    Volt::route('projects/{project}/cable-journal-versions', 'cable-journal-versions-index')->name('projects.cable-journal-versions.index');
+    Volt::route('plan-keys', 'plan-keys-index')->name('plan-keys.index');
 });
 
 Route::middleware(['auth'])->group(function () {

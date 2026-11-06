@@ -10,6 +10,8 @@ new class extends Component {
 
     public function mount(ProjectProductSet $projectProductSet)
     {
+        // Выданная из 3D-плана смета не правится: закупщик уже работает по ней.
+        abort_if($projectProductSet->isLocked(), 403, 'Смета из 3D-плана выдана и не правится.');
         $this->projectProductSet = $projectProductSet;
         $this->name = $projectProductSet->name;
         $this->comment = $projectProductSet->comment;

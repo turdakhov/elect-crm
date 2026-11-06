@@ -22,6 +22,7 @@ new class extends Component {
     {
         $set = $this->project->productSets()->find($id);
         if ($set) {
+            abort_if($set->isLocked(), 403, 'Смета из 3D-плана выдана и не удаляется.');
             $this->authorize('delete', $set);
             $set->delete();
             session()->flash('message', 'Смета успешно удалена!');
@@ -51,22 +52,31 @@ new class extends Component {
             <div class="space-y-4">
                 @foreach ($this->productSets as $set)
                 <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-                    <h2 class="text-lg font-semibold mb-2">{{ $set->name }}</h2>
+                    <h2 class="text-lg font-semibold mb-2">
+                        {{ $set->name }}
+                        @if ($set->isLocked())
+                            <flux:badge size="sm" color="indigo" icon="lock-closed">из 3D-плана, выдана {{ $set->created_at->format('d.m.Y') }}</flux:badge>
+                        @endif
+                    </h2>
                     @if ($set->comment)
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ $set->comment }}</p>
                     @endif
 
                     <div class="flex items-center gap-2">
+                        @unless ($set->isLocked())
                         <flux:button size="sm" variant="primary" icon="pencil" :href="route('project-product-set.edit', $set)">
                             Редактировать
                         </flux:button>
+                        @endunless
                         <flux:button size="sm" color="blue" icon="shopping-bag" :href="route('project-product-set.items.index', $set)">
                             Товары ({{ $set->items->count() }})
                         </flux:button>
+                        @unless ($set->isLocked())
                         <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSet({{ $set->id }})"
                             onclick="return confirm('Вы уверены? Это удалит всю смету.')">
                             Удалить
                         </flux:button>
+                        @endunless
                     </div>
                 </div>
                 @endforeach

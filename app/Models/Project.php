@@ -31,6 +31,16 @@ class Project extends Model
         return $this->hasOne(ProjectProductSet::class);
     }
 
+    public function planSyncs(): HasMany
+    {
+        return $this->hasMany(PlanSync::class);
+    }
+
+    public function cableJournalVersions(): HasMany
+    {
+        return $this->hasMany(CableJournalVersion::class);
+    }
+
     public function productSets(): HasMany
     {
         return $this->hasMany(ProjectProductSet::class);

@@ -21,7 +21,8 @@ new class extends Component {
 
     public function deleteItem($itemId)
     {
-        \App\Models\ProjectProductSetItem::find($itemId)?->delete();
+        abort_if($this->projectProductSet->isLocked(), 403, 'Смета из 3D-плана выдана и не правится.');
+        $this->projectProductSet->items()->whereKey($itemId)->first()?->delete();
         session()->flash('message', 'Товар удален из набора!');
     }
 
@@ -82,14 +83,23 @@ new class extends Component {
                 <p class="text-gray-600 dark:text-gray-400">{{ $projectProductSet->project->name }}</p>
             </div>
             <div class="flex gap-2">
+                @unless ($projectProductSet->isLocked())
                 <flux:button variant="primary" icon="plus" :href="route('project-product-set.items.create', $projectProductSet)">
                     Добавить товар
                 </flux:button>
+                @endunless
                 <flux:button color="emerald" icon="document-text" wire:click="exportPdf">
                     Скачать PDF
                 </flux:button>
             </div>
         </div>
+
+        @if ($projectProductSet->isLocked())
+        <flux:callout icon="lock-closed">
+            <flux:callout.heading>{{ $projectProductSet->name }} — выдана {{ $projectProductSet->created_at->format('d.m.Y H:i') }}{{ $projectProductSet->issuedBy ? ', '.$projectProductSet->issuedBy->name : '' }}</flux:callout.heading>
+            <p>Смета из 3D-плана не правится. Изменения проекта придут доп-сметой: <a class="underline" href="{{ route('plan-syncs.show', $projectProductSet->plan_sync_id) }}">отправка №{{ $projectProductSet->plan_sync_id }}</a>.</p>
+        </flux:callout>
+        @endif
 
         @if (session()->has('message'))
         <flux:callout icon="bell-alert">
@@ -136,12 +146,13 @@ new class extends Component {
                                 @endif
                             </td>
                             <td class="px-6 py-4">
-                                {{ $item->quantity }} {{ $item->product?->unit ?? '' }}
+                                <span @class(['text-red-600' => $item->quantity < 0])>{{ rtrim(rtrim(number_format($item->quantity, 2, ',', ' '), '0'), ',') }} {{ $item->product?->unit ?? '' }}</span>
                             </td>
                             <td class="px-6 py-4 text-gray-700 dark:text-gray-200">
                                 {{ $item->comment ?? '—' }}
                             </td>
                             <td class="px-6 py-4 flex gap-2 justify-end">
+                                @unless ($projectProductSet->isLocked())
                                 <flux:button size="xs" color="blue" icon="pencil" :href="route('project-product-set-items.edit', $item)">
                                     Редактировать
                                 </flux:button>
@@ -149,6 +160,7 @@ new class extends Component {
                                     onclick="return confirm('Удалить товар из сметы?')">
                                     Удалить
                                 </flux:button>
+                                @endunless
                             </td>
                         </tr>
                         @endforeach

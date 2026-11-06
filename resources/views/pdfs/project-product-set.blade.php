@@ -197,7 +197,7 @@
                     <div class="description">Товар удалён</div>
                     @endif
                 </td>
-                <td class="center">{{ $item->quantity }}</td>
+                <td class="center">{{ rtrim(rtrim(number_format($item->quantity, 2, ',', ' '), '0'), ',') }}</td>
                 <td class="center">{{ $item->product?->unit ?? '—' }}</td>
                 <td>{{ $item->comment ?? '—' }}</td>
             </tr>

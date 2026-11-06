@@ -14,6 +14,7 @@ class ProjectProductSetItem extends Model
     protected $fillable = [
         'project_product_set_id',
         'product_id',
+        'plan_key',
         'quantity',
         'comment',
     ];
@@ -21,7 +22,7 @@ class ProjectProductSetItem extends Model
     public function casts(): array
     {
         return [
-            'quantity' => 'integer',
+            'quantity' => 'float',
         ];
     }
 

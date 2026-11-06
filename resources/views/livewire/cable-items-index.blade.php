@@ -124,6 +124,9 @@ new class extends Component {
                 <flux:button variant="primary" color="blue" icon="chart-bar" :href="route('projects.cable-items.summary', $project)">
                     Подсчет
                 </flux:button>
+                <flux:button variant="primary" color="indigo" icon="queue-list" :href="route('projects.cable-journal-versions.index', $project)">
+                    Версии из 3D-плана
+                </flux:button>
                 @if ($floors->isNotEmpty() || $deleteCount > 0)
                 <div class="min-w-[180px]">
                     <flux:select wire:model.live="deleteFloor" aria-label="Этаж для удаления">

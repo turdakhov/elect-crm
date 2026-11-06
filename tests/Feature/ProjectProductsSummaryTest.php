@@ -188,8 +188,8 @@ test('экспорт pdf из сводки включает только нед�
                 return [$item->product->name => $item->quantity];
             });
 
-            return ($quantitiesByName->get('Не куплен') === 10)
-                && ($quantitiesByName->get('Частично куплен') === 6)
+            return ($quantitiesByName->get('Не куплен') == 10)
+                && ($quantitiesByName->get('Частично куплен') == 6)
                 && ! $quantitiesByName->has('Куплен полностью')
                 && ! $quantitiesByName->has('Куплен с запасом');
         }))

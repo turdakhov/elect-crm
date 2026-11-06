@@ -136,7 +136,7 @@ describe('Товары в смете', function () {
         ]);
 
         expect(ProjectProductSetItem::count())->toBe(1);
-        expect(ProjectProductSetItem::first()->quantity)->toBe(5);
+        expect(ProjectProductSetItem::first()->quantity)->toBe(5.0);
         expect(ProjectProductSetItem::first()->comment)->toBe('Комментарий к позиции');
     });
 
@@ -153,7 +153,7 @@ describe('Товары в смете', function () {
             'comment' => 'Новый комментарий',
         ]);
 
-        expect($item->fresh()->quantity)->toBe(10);
+        expect($item->fresh()->quantity)->toBe(10.0);
         expect($item->fresh()->comment)->toBe('Новый комментарий');
     });
 
@@ -288,7 +288,7 @@ describe('Товары в смете', function () {
         ]);
 
         expect($item->fresh()->product_id)->toBe($product2->id);
-        expect($item->fresh()->quantity)->toBe(10);
+        expect($item->fresh()->quantity)->toBe(10.0);
     });
 });
 

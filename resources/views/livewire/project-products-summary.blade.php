@@ -25,7 +25,7 @@ new class extends Component {
             ->groupBy('product_id')
             ->map(fn($items) => [
                 'product' => $items->first()->product,
-                'estimate_quantity' => $items->sum('quantity'),
+                'estimate_quantity' => round($items->sum('quantity'), 2),
             ]);
 
         // Получаем все товары из закупов
@@ -48,7 +48,7 @@ new class extends Component {
 
             $estimateQty = $estimate['estimate_quantity'] ?? 0;
             $purchaseQty = $purchase['purchase_quantity'] ?? 0;
-            $remainder = $estimateQty - $purchaseQty;
+            $remainder = round($estimateQty - $purchaseQty, 2);
 
             // Определяем цвет
             $color = 'red'; // по умолчанию красный (недостаточно закуплено)
@@ -81,7 +81,7 @@ new class extends Component {
             ->groupBy('product_id')
             ->map(fn($items) => [
                 'product' => $items->first()->product,
-                'estimate_quantity' => $items->sum('quantity'),
+                'estimate_quantity' => round($items->sum('quantity'), 2),
             ]);
 
         $purchaseProducts = $this->project->purchases()
@@ -97,7 +97,7 @@ new class extends Component {
             ->map(function ($estimate, $productId) use ($purchaseProducts) {
                 $estimateQuantity = $estimate['estimate_quantity'];
                 $purchaseQuantity = $purchaseProducts->get($productId)['purchase_quantity'] ?? 0;
-                $remainingQuantity = $estimateQuantity - $purchaseQuantity;
+                $remainingQuantity = round($estimateQuantity - $purchaseQuantity, 2);
 
                 if ($remainingQuantity <= 0) {
                     return null;
