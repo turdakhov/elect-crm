@@ -182,34 +182,39 @@ new class extends Component {
                 <div>
                     <h2 class="text-lg font-semibold">Смета «{{ $planSync->scopeLabel() }}»: разница с уже выданным</h2>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Выдана будет отдельной сметой и больше не изменится. Минус — потребность уменьшилась.
-                        Считается только по сметам этой части: щиты и трассы не смешиваются.
+                        Выдаётся отдельной сметой; её можно править — ручные правки доп-сметой не перепишутся.
+                        Минус — потребность уменьшилась. Считается по своей части: щиты и трассы не смешиваются.
+                        Несколько отправок одной сметой — на <a class="underline" href="{{ route('projects.plan-syncs.index', $planSync->project) }}">странице отправок</a>.
                     </p>
                 </div>
                 @if (! $this->blockers)
                     <flux:button variant="primary" color="green" icon="document-check" wire:click="issueEstimate"
-                        onclick="return confirm('Выдать смету закупщику? Править её потом будет нельзя.')">
+                        onclick="return confirm('Выдать смету?')">
                         Выдать смету
                     </flux:button>
                 @endif
             </div>
 
-            @foreach ($planSync->productSets as $set)
+            @if ($planSync->productSet)
                 <p class="mb-3 text-sm">
-                    По этой отправке выдана
-                    <a class="text-blue-600 underline" href="{{ route('project-product-set.items.index', $set) }}" wire:navigate>«{{ $set->name }}»</a>.
+                    Выдана в
+                    <a class="text-blue-600 underline" href="{{ route('project-product-set.items.index', $planSync->productSet) }}" wire:navigate>«{{ $planSync->productSet->name }}»</a>.
                 </p>
-            @endforeach
+            @endif
 
             @if ($this->blockers && $this->lines)
                 <flux:callout icon="information-circle" class="mb-4">
                     @foreach ($this->blockers as $blocker)
                         <p>{{ $blocker }}</p>
                     @endforeach
-                    @if (collect($this->lines)->contains(fn ($l) => ! $l['product']))
-                        <p><a class="text-blue-600 underline" href="{{ route('plan-keys.index', ['unmapped' => 1]) }}" wire:navigate>Привязать ключи к товарам</a></p>
-                    @endif
                 </flux:callout>
+            @endif
+
+            @if (collect($this->lines)->contains(fn ($l) => ! $l['product'] && ! $l['skip']))
+                <p class="mb-3 text-sm text-amber-600">
+                    Строки без товара войдут в смету с названием из 3D-плана; товар выберете в смете или
+                    <a class="underline" href="{{ route('plan-keys.index', ['unmapped' => 1]) }}" wire:navigate>привяжете ключ</a> — тогда подставится сам.
+                </p>
             @endif
 
             @if ($this->lines)
@@ -227,14 +232,16 @@ new class extends Component {
                         </thead>
                         <tbody>
                             @foreach ($this->lines as $line)
-                                <tr wire:key="line-{{ md5($line['key']) }}" class="border-b border-gray-200 dark:border-gray-700">
+                                <tr wire:key="line-{{ md5($line['key']) }}" @class(['border-b border-gray-200 dark:border-gray-700', 'opacity-50 line-through' => $line['skip']])>
                                     <td class="px-4 py-2">{{ $line['section'] }}</td>
                                     <td class="px-4 py-2 text-gray-900 dark:text-white">{{ $line['name'] }}</td>
                                     <td class="px-4 py-2">
-                                        @if ($line['product'])
+                                        @if ($line['skip'])
+                                            не закупаем
+                                        @elseif ($line['product'])
                                             {{ $line['product']->name }}
                                         @else
-                                            <span class="text-red-600">не привязан</span>
+                                            <span class="text-amber-600">без товара</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-2 text-right">{{ $this->qty($line['before']) }}</td>
@@ -247,7 +254,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-            @elseif (! $planSync->productSets->count())
+            @elseif (! $planSync->productSet)
                 <p class="text-sm text-gray-600 dark:text-gray-400">Потребность совпадает с выданным — выдавать нечего.</p>
             @endif
         </section>

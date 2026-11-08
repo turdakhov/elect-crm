@@ -14,6 +14,11 @@ class PlanKey extends Model
 {
     protected $guarded = ['id'];
 
+    public function casts(): array
+    {
+        return ['skip' => 'boolean'];
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

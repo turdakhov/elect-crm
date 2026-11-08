@@ -22,6 +22,8 @@ new class extends Component {
             ->with('items.product')
             ->get()
             ->flatMap(fn($set) => $set->items)
+            // Строка 3D-плана без товара в сводку по товарам не ложится — о ней ниже.
+            ->whereNotNull('product_id')
             ->groupBy('product_id')
             ->map(fn($items) => [
                 'product' => $items->first()->product,
@@ -72,12 +74,23 @@ new class extends Component {
         })->values();
     }
 
+    /** Строки смет без товара: выдали из 3D-плана, а товар ещё не выбран. */
+    #[Computed]
+    public function unmatched(): int
+    {
+        return \App\Models\ProjectProductSetItem::whereNull('product_id')
+            ->whereHas('projectProductSet', fn ($q) => $q->where('project_id', $this->project->id))
+            ->count();
+    }
+
     public function exportPdf()
     {
         $estimateProducts = $this->project->productSets()
             ->with('items.product.file')
             ->get()
             ->flatMap(fn($set) => $set->items)
+            // Строка 3D-плана без товара в сводку по товарам не ложится — о ней ниже.
+            ->whereNotNull('product_id')
             ->groupBy('product_id')
             ->map(fn($items) => [
                 'product' => $items->first()->product,
@@ -166,6 +179,13 @@ new class extends Component {
                 Скачать PDF
             </flux:button>
         </div>
+
+        @if ($this->unmatched)
+        <flux:callout icon="exclamation-triangle" color="amber">
+            <flux:callout.heading>Строк смет без товара: {{ $this->unmatched }} — в сводке их нет</flux:callout.heading>
+            <p>Выберите товар в строке сметы или привяжите ключ в <a class="underline" href="{{ route('plan-keys.index', ['unmapped' => 1]) }}">ключах 3D-плана</a>.</p>
+        </flux:callout>
+        @endif
 
         @if ($this->products->count() > 0)
         <div class="rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900 overflow-hidden">

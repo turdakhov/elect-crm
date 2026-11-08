@@ -237,14 +237,14 @@ describe('смета из 3D-плана', function () {
         }
     }
 
-    it('первая выдача — вся потребность, и смета закрыта от правки', function () {
+    it('первая выдача — вся потребность', function () {
         sendSync($this, $this->project, [], [need('кабель|ВВГнг 3×2.5', 412.6), need('прибор|socket', 24, 'шт')]);
         mapKeys(['кабель|ВВГнг 3×2.5' => $this->cable, 'прибор|socket' => $this->socket]);
 
         $set = EstimateSync::issue(PlanSync::first(), $this->user);
 
-        expect($set->name)->toBe('Смета из 3D-плана')
-            ->and($set->isLocked())->toBeTrue()
+        expect($set->name)->toBe('Смета из 3D-плана — трассы')
+            ->and($set->fromPlan())->toBeTrue()
             ->and($set->items()->where('product_id', $this->cable->id)->first()->quantity)->toBe(412.6)
             ->and($set->items()->where('product_id', $this->socket->id)->first()->quantity)->toBe(24.0);
     });
@@ -257,7 +257,7 @@ describe('смета из 3D-плана', function () {
         sendSync($this, $this->project, [], [need('кабель|ВВГнг 3×2.5', 438.2), need('прибор|socket', 22, 'шт')]);
         $set = EstimateSync::issue(PlanSync::latest('id')->first(), $this->user);
 
-        expect($set->name)->toBe('Доп. смета №1 из 3D-плана')
+        expect($set->name)->toBe('Доп. смета №1 из 3D-плана — трассы')
             ->and($set->items()->where('product_id', $this->cable->id)->first()->quantity)->toBe(38.2)
             ->and($set->items()->where('product_id', $this->socket->id)->first()->quantity)->toBe(-2.0)
             // Сумма всех смет равна последней потребности.
@@ -286,11 +286,68 @@ describe('смета из 3D-плана', function () {
         expect(EstimateSync::delta(PlanSync::latest('id')->first()))->toBe([]);
     });
 
-    it('без привязки к товару выдать нельзя', function () {
-        sendSync($this, $this->project, [], [need('кабель|ВВГнг 3×2.5', 400)]);
+    it('без привязки к товару смета выдаётся, строка — без товара', function () {
+        sendSync($this, $this->project, [], [need('кабель|ВВГнг 3×2.5', 400), need('прибор|socket', 2, 'шт')]);
+        mapKeys(['прибор|socket' => $this->socket]);
 
-        expect(fn () => EstimateSync::issue(PlanSync::first(), $this->user))
-            ->toThrow(RuntimeException::class, 'Не привязаны');
+        $set = EstimateSync::issue(PlanSync::first(), $this->user);
+        $line = $set->items()->where('plan_key', 'кабель|ВВГнг 3×2.5')->first();
+
+        expect($line->product_id)->toBeNull()
+            ->and($line->quantity)->toBe(400.0)
+            ->and($line->comment)->toBe('кабель|ВВГнг 3×2.5');
+    });
+
+    it('привязка ключа подставляет товар в строки смет без товара', function () {
+        sendSync($this, $this->project, [], [need('кабель|ВВГнг 3×2.5', 400)]);
+        EstimateSync::issue(PlanSync::first(), $this->user);
+        $this->actingAs($this->user);
+
+        Volt::test('plan-keys-index')->call('edit', PlanKey::first()->id)->call('choose', $this->cable->id);
+
+        expect(ProjectProductSetItem::first()->product_id)->toBe($this->cable->id);
+    });
+
+    it('«не закупаем» в смету не идёт и доп-сметой не всплывает', function () {
+        sendSync($this, $this->project, [], [need('щит: кроссы и шины|Заглушка', 12, 'шт'), need('прибор|socket', 2, 'шт')]);
+        PlanKey::where('key', 'щит: кроссы и шины|Заглушка')->update(['skip' => true]);
+        $set = EstimateSync::issue(PlanSync::first(), $this->user);
+
+        sendSync($this, $this->project, [], [need('щит: кроссы и шины|Заглушка', 12, 'шт'), need('прибор|socket', 3, 'шт')]);
+        $lines = EstimateSync::delta(PlanSync::latest('id')->first());
+
+        expect($set->items()->pluck('plan_key')->all())->toBe(['прибор|socket'])
+            ->and(array_column($lines, 'key'))->toBe(['прибор|socket']);
+    });
+
+    it('ручная правка сметы следующей доп-сметой не возвращается', function () {
+        sendSync($this, $this->project, [], [need('прибор|socket', 24, 'шт')]);
+        mapKeys(['прибор|socket' => $this->socket]);
+        $set = EstimateSync::issue(PlanSync::first(), $this->user);
+        // Решили взять 20 — проект от этого не изменился.
+        $set->items()->first()->update(['quantity' => 20]);
+
+        sendSync($this, $this->project, [], [need('прибор|socket', 26, 'шт')]);
+        $lines = EstimateSync::delta(PlanSync::latest('id')->first());
+
+        expect($lines)->toHaveCount(1)->and($lines[0]['delta'])->toBe(2.0);
+    });
+
+    it('удалённая целиком смета больше не считается выданной', function () {
+        sendSync($this, $this->project, [], [need('прибор|socket', 24, 'шт')]);
+        $set = EstimateSync::issue(PlanSync::first(), $this->user);
+        $set->forceDelete();
+
+        expect(EstimateSync::delta(PlanSync::first()))->toHaveCount(1);
+    });
+
+    it('сводка не падает на строке без товара и говорит о ней', function () {
+        sendSync($this, $this->project, [], [need('кабель|ВВГнг 3×2.5', 400)]);
+        EstimateSync::issue(PlanSync::first(), $this->user);
+        $this->actingAs($this->user);
+
+        Volt::test('project-products-summary', ['project' => $this->project])
+            ->assertSee('Строк смет без товара: 1');
     });
 
     it('сводка «план и факт» складывает выданные сметы с минусами', function () {
@@ -306,18 +363,24 @@ describe('смета из 3D-плана', function () {
         expect($row['estimate_quantity'])->toBe(20.0);
     });
 
-    it('выданную смету не открыть на правку и не удалить', function () {
-        sendSync($this, $this->project, [], [need('прибор|socket', 24, 'шт')]);
-        mapKeys(['прибор|socket' => $this->socket]);
+    it('выданную смету можно править: дробь, минус и выбор товара в строке без товара', function () {
+        sendSync($this, $this->project, [], [need('кабель|ВВГнг 3×2.5', 400.5)]);
         $set = EstimateSync::issue(PlanSync::first(), $this->user);
+        $item = $set->items()->first();
         $this->actingAs($this->user);
 
-        $this->get(route('project-product-set.items.create', $set))->assertForbidden();
-        $this->get(route('project-product-set.edit', $set))->assertForbidden();
-        $this->get(route('project-product-set-items.edit', $set->items()->first()))->assertForbidden();
-        Volt::test('project-product-set-index', ['project' => $this->project])->call('deleteSet', $set->id)->assertForbidden();
+        $this->get(route('project-product-set.items.create', $set))->assertOk();
+        $this->get(route('project-product-set.edit', $set))->assertOk();
+        $this->get(route('project-product-set-items.edit', $item))->assertOk();
 
-        expect(ProjectProductSet::find($set->id))->not->toBeNull();
+        Volt::test('project-product-set-items-edit', ['projectProductSetItem' => $item])
+            ->set('product_id', $this->cable->id)
+            ->set('quantity', -12.5)
+            ->call('submit')
+            ->assertHasNoErrors();
+
+        expect($item->fresh()->product_id)->toBe($this->cable->id)
+            ->and($item->fresh()->quantity)->toBe(-12.5);
     });
 
     it('кнопка «Выдать смету» на странице отправки', function () {
@@ -325,8 +388,8 @@ describe('смета из 3D-плана', function () {
         $this->actingAs($this->user);
 
         Volt::test('plan-syncs-show', ['planSync' => PlanSync::first()])
-            ->assertSee('не привязан')
-            ->assertDontSee('Выдать смету</');
+            ->assertSee('без товара')
+            ->assertSee('Выдать смету');
 
         mapKeys(['прибор|socket' => $this->socket]);
         Volt::test('plan-syncs-show', ['planSync' => PlanSync::first()])
@@ -378,7 +441,7 @@ describe('части: трассы и щиты', function () {
         $trace = EstimateSync::issue(PlanSync::where('scope', 'трассы')->first(), $this->user);
         $panel = EstimateSync::issue(PlanSync::where('scope', 'щит d15')->first(), $this->user);
 
-        expect($trace->name)->toBe('Смета из 3D-плана')
+        expect($trace->name)->toBe('Смета из 3D-плана — трассы')
             ->and($panel->name)->toBe('Смета из 3D-плана — щит d15 — Подвал')
             ->and($panel->items()->first()->quantity)->toBe(12.0)
             ->and(EstimateSync::issued($this->project, 'трассы'))->toBe(['кабель|5*4' => 58.0])
@@ -419,5 +482,49 @@ describe('части: трассы и щиты', function () {
         Volt::test('plan-syncs-show', ['planSync' => $sync])
             ->assertSee('щит d15 — Подвал')
             ->assertDontSee('Кабельный журнал');
+    });
+});
+
+describe('одна смета из нескольких отправок', function () {
+    beforeEach(function () {
+        $this->breaker = Product::factory()->create(['name' => 'Автомат C16', 'unit' => 'шт']);
+    });
+
+    it('складывает одинаковые строки щитов и помечает обе отправки выданными', function () {
+        sendPanel($this, $this->project, 'd15', [need('щит: аппараты|Автомат 1P C16', 10, 'шт'), need('щит: корпус|Щит 5×18', 1, 'шт')]);
+        sendPanel($this, $this->project, 'd13', [need('щит: аппараты|Автомат 1P C16', 14, 'шт')]);
+        mapKeys(['щит: аппараты|Автомат 1P C16' => $this->breaker]);
+
+        $set = EstimateSync::issueMany(PlanSync::orderBy('id')->get(), $this->user);
+        $breaker = $set->items()->where('plan_key', 'щит: аппараты|Автомат 1P C16')->first();
+
+        expect($set->name)->toBe('Смета из 3D-плана — щит d15 — Подвал + щит d13 — Подвал')
+            ->and($set->items()->count())->toBe(2)
+            ->and($breaker->quantity)->toBe(24.0)
+            ->and($breaker->comment)->toBe('щит: аппараты|Автомат 1P C16 (d15: 10, d13: 14)')
+            ->and(PlanSync::whereNull('product_set_id')->count())->toBe(0)
+            ->and(EstimateSync::issuable($this->project))->toHaveCount(0);
+    });
+
+    it('кнопки «Все щиты» и «Создать одну смету» на странице отправок', function () {
+        sendSync($this, $this->project, [journalRow()], [need('прибор|socket', 2, 'шт')]);
+        sendPanel($this, $this->project, 'd15', [need('щит: аппараты|Автомат 1P C16', 10, 'шт')]);
+        sendPanel($this, $this->project, 'd13', [need('щит: аппараты|Автомат 1P C16', 14, 'шт')]);
+        $this->actingAs($this->user);
+
+        $page = Volt::test('plan-syncs-index', ['project' => $this->project])->call('selectPanels');
+        expect($page->get('selected'))->toHaveCount(2);
+        $page->call('issueSelected')->assertRedirect();
+
+        // Трассы не выбирались — остались к выдаче.
+        expect(EstimateSync::issuable($this->project)->pluck('scope')->all())->toBe(['трассы']);
+    });
+
+    it('устаревшую отправку в общую смету не взять', function () {
+        sendPanel($this, $this->project, 'd15', [need('k', 1, 'шт')]);
+        sendPanel($this, $this->project, 'd15', [need('k', 2, 'шт')]);
+
+        expect(fn () => EstimateSync::issueMany(PlanSync::orderBy('id')->limit(1)->get(), $this->user))
+            ->toThrow(RuntimeException::class, 'новее');
     });
 });

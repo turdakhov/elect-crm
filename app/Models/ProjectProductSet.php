@@ -37,12 +37,18 @@ class ProjectProductSet extends Model
     }
 
     /**
-     * Смета из 3D-плана выдана закупщику и не правится: он по ней уже работает.
-     * Изменение проекта приходит новой доп-сметой, а не правкой этой.
+     * Смета выдана из 3D-плана. Править её можно: выданное помнят отправки
+     * (`EstimateSync::issued`), и ручная правка доп-сметой не вернётся.
      */
-    public function isLocked(): bool
+    public function fromPlan(): bool
     {
         return $this->plan_sync_id !== null;
+    }
+
+    /** Отправки 3D-плана, собранные в эту смету. */
+    public function planSyncs(): HasMany
+    {
+        return $this->hasMany(PlanSync::class, 'product_set_id');
     }
 
     public function items(): HasMany

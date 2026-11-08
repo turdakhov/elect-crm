@@ -15,8 +15,6 @@ new class extends Component {
 
     public function mount(ProjectProductSet $projectProductSet)
     {
-        // Выданная из 3D-плана смета не правится: закупщик уже работает по ней.
-        abort_if($projectProductSet->isLocked(), 403, 'Смета из 3D-плана выдана и не правится.');
         $this->projectProductSet = $projectProductSet;
         $this->display_value = $this->selectedProductName;
     }
@@ -49,6 +47,8 @@ new class extends Component {
     {
         return $this->projectProductSet
             ->items()
+            // Строки 3D-плана бывают без товара: NULL в NOT IN спрятал бы весь список.
+            ->whereNotNull('product_id')
             ->pluck('product_id')
             ->all();
     }

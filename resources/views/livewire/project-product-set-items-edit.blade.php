@@ -15,12 +15,11 @@ new class extends Component {
 
     public function mount(ProjectProductSetItem $projectProductSetItem)
     {
-        // Выданная из 3D-плана смета не правится: закупщик уже работает по ней.
-        abort_if($projectProductSetItem->projectProductSet->isLocked(), 403, 'Смета из 3D-плана выдана и не правится.');
         $this->projectProductSetItem = $projectProductSetItem;
         $this->product_id = $projectProductSetItem->product_id;
         $this->quantity = $projectProductSetItem->quantity;
-        $this->display_value = $projectProductSetItem->product->name;
+        // Строка из 3D-плана бывает без товара: его выбирают здесь.
+        $this->display_value = $projectProductSetItem->product?->name ?? '';
         $this->comment = $projectProductSetItem->comment;
     }
 
@@ -68,6 +67,10 @@ new class extends Component {
             ->projectProductSet
             ->items()
             ->where('id', '!=', $this->projectProductSetItem->id)
+            // Строки 3D-плана с одним товаром на разных ключах законны (подрозетник
+            // ГКЛ и в мебели — один товар): прячем только товары ручных строк.
+            ->where('plan_key', '')
+            ->whereNotNull('product_id')
             ->pluck('product_id')
             ->all();
     }
@@ -78,9 +81,15 @@ new class extends Component {
             'product_id' => [
                 'required',
                 'exists:products,id',
-                'unique:project_product_set_items,product_id,' . $this->projectProductSetItem->id . ',id,project_product_set_id,' . $this->projectProductSetItem->project_product_set_id,
+                \Illuminate\Validation\Rule::unique('project_product_set_items', 'product_id')
+                    ->ignore($this->projectProductSetItem->id)
+                    ->where('project_product_set_id', $this->projectProductSetItem->project_product_set_id)
+                    ->where('plan_key', $this->projectProductSetItem->plan_key),
             ],
-            'quantity' => 'required|integer|min:1|max:10000',
+            // Строка 3D-плана — метры с дробью, а в доп-смете и с минусом.
+            'quantity' => $this->projectProductSetItem->plan_key !== ''
+                ? 'required|numeric|min:-100000|max:100000'
+                : 'required|integer|min:1|max:10000',
             'comment' => 'nullable|string|max:500',
         ], [
             'product_id.unique' => 'Этот товар уже добавлен в смету.',
@@ -149,7 +158,7 @@ new class extends Component {
 
                 <flux:field>
                     <flux:label for="quantity">Количество</flux:label>
-                    <flux:input id="quantity" type="number" wire:model="quantity" min="1" placeholder="Количество"></flux:input>
+                    <flux:input id="quantity" type="number" step="any" wire:model="quantity" placeholder="Количество"></flux:input>
                     <flux:error name="quantity" />
                 </flux:field>
 

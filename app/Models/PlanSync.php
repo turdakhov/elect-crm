@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Отправка из 3D-плана: полный журнал и полная потребность на момент нажатия
@@ -22,6 +21,7 @@ class PlanSync extends Model
             'needs' => 'array',
             'warnings' => 'array',
             'journal_accepted_at' => 'datetime',
+            'issued_at' => 'datetime',
         ];
     }
 
@@ -35,9 +35,10 @@ class PlanSync extends Model
         return $this->belongsTo(User::class, 'journal_accepted_by');
     }
 
-    public function productSets(): HasMany
+    /** Смета, в которую выдана эта отправка; одна смета может собрать несколько отправок. */
+    public function productSet(): BelongsTo
     {
-        return $this->hasMany(ProjectProductSet::class);
+        return $this->belongsTo(ProjectProductSet::class, 'product_set_id');
     }
 
     public const TRACE_SCOPE = 'трассы';
