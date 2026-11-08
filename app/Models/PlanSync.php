@@ -40,12 +40,27 @@ class PlanSync extends Model
         return $this->hasMany(ProjectProductSet::class);
     }
 
+    public const TRACE_SCOPE = 'трассы';
+
     /**
-     * Действовать можно только по последней отправке проекта: принять старую
-     * значило бы откатить журнал или выдать смету по устаревшей модели.
+     * Действовать можно только по последней отправке своей части: принять
+     * старую значило бы откатить журнал или выдать смету по устаревшей модели.
+     * Отправка щита трассы не устаревает — это другая смета.
      */
     public function isLatest(): bool
     {
-        return ! static::where('project_id', $this->project_id)->where('id', '>', $this->id)->exists();
+        return ! static::where('project_id', $this->project_id)->where('scope', $this->scope)
+            ->where('id', '>', $this->id)->exists();
+    }
+
+    /** Журнал есть только у трасс: у щита кабелей с наклейками нет. */
+    public function hasJournal(): bool
+    {
+        return $this->scope === self::TRACE_SCOPE;
+    }
+
+    public function scopeLabel(): string
+    {
+        return $this->scope_name ?: $this->scope;
     }
 }

@@ -39,14 +39,19 @@ function need(string $key, float $qty, string $unit = 'м', string $name = ''): 
     return ['key' => $key, 'name' => $name ?: $key, 'unit' => $unit, 'qty' => $qty, 'section' => 'кабель'];
 }
 
-function sendSync($test, Project $project, array $journal, array $needs, string $token = PLAN3D_TOKEN)
+function sendSync($test, Project $project, array $journal, array $needs, string $token = PLAN3D_TOKEN, array $extra = [])
 {
-    return $test->withToken($token)->postJson(route('api.plan3d.syncs.store', $project), [
+    return $test->withToken($token)->postJson(route('api.plan3d.syncs.store', $project), array_merge([
         'source_project' => 'kv-1',
         'source_name' => 'Квартира 1',
         'journal' => $journal,
         'needs' => $needs,
-    ]);
+    ], $extra));
+}
+
+function sendPanel($test, Project $project, string $panel, array $needs)
+{
+    return sendSync($test, $project, [], $needs, PLAN3D_TOKEN, ['scope' => 'щит '.$panel, 'scope_name' => 'щит '.$panel.' — Подвал']);
 }
 
 describe('API', function () {
@@ -343,5 +348,76 @@ describe('смета из 3D-плана', function () {
             ->call('choose', $this->socket->id);
 
         expect($key->fresh()->product_id)->toBe($this->socket->id);
+    });
+});
+
+describe('части: трассы и щиты', function () {
+    beforeEach(function () {
+        $this->wire = Product::factory()->create(['name' => 'ВВГнг 5×4', 'unit' => 'м']);
+        $this->breaker = Product::factory()->create(['name' => 'Автомат C16', 'unit' => 'шт']);
+    });
+
+    it('у щита журнала не бывает', function () {
+        sendSync($this, $this->project, [journalRow()], [need('k', 1)], PLAN3D_TOKEN, ['scope' => 'щит d15'])
+            ->assertStatus(422);
+    });
+
+    it('часть называется только «трассы» или «щит …»', function () {
+        sendSync($this, $this->project, [], [need('k', 1)], PLAN3D_TOKEN, ['scope' => 'всё подряд'])
+            ->assertStatus(422);
+    });
+
+    it('сметы щита и трасс не вычитаются друг из друга, даже на одном товаре', function () {
+        // Кабель трасс и провод щита привязаны к одному товару.
+        sendSync($this, $this->project, [], [need('кабель|5*4', 58)]);
+        sendPanel($this, $this->project, 'd15', [need('щит: провод|Кабель 5×4 — в щите', 12)])
+            ->assertJsonPath('scope', 'щит d15')
+            ->assertJsonPath('scope_name', 'щит d15 — Подвал');
+        mapKeys(['кабель|5*4' => $this->wire, 'щит: провод|Кабель 5×4 — в щите' => $this->wire]);
+
+        $trace = EstimateSync::issue(PlanSync::where('scope', 'трассы')->first(), $this->user);
+        $panel = EstimateSync::issue(PlanSync::where('scope', 'щит d15')->first(), $this->user);
+
+        expect($trace->name)->toBe('Смета из 3D-плана')
+            ->and($panel->name)->toBe('Смета из 3D-плана — щит d15 — Подвал')
+            ->and($panel->items()->first()->quantity)->toBe(12.0)
+            ->and(EstimateSync::issued($this->project, 'трассы'))->toBe(['кабель|5*4' => 58.0])
+            ->and(EstimateSync::issued($this->project, 'щит d15'))->toBe(['щит: провод|Кабель 5×4 — в щите' => 12.0]);
+    });
+
+    it('у каждого щита свои доп-сметы', function () {
+        sendPanel($this, $this->project, 'd15', [need('щит: аппараты|Автомат 1P C16', 10, 'шт')]);
+        sendPanel($this, $this->project, 'd13', [need('щит: аппараты|Автомат 1P C16', 14, 'шт')]);
+        mapKeys(['щит: аппараты|Автомат 1P C16' => $this->breaker]);
+        EstimateSync::issue(PlanSync::where('scope', 'щит d15')->first(), $this->user);
+        EstimateSync::issue(PlanSync::where('scope', 'щит d13')->first(), $this->user);
+
+        sendPanel($this, $this->project, 'd15', [need('щит: аппараты|Автомат 1P C16', 11, 'шт')]);
+        $extra = EstimateSync::issue(PlanSync::where('scope', 'щит d15')->latest('id')->first(), $this->user);
+
+        expect($extra->name)->toBe('Доп. смета №1 из 3D-плана — щит d15 — Подвал')
+            ->and($extra->items()->first()->quantity)->toBe(1.0)
+            ->and(EstimateSync::issued($this->project, 'щит d13'))->toBe(['щит: аппараты|Автомат 1P C16' => 14.0]);
+    });
+
+    it('отправка щита не делает устаревшей отправку трасс', function () {
+        sendSync($this, $this->project, [journalRow()], []);
+        sendPanel($this, $this->project, 'd15', [need('k', 1)]);
+
+        $trace = PlanSync::where('scope', 'трассы')->first();
+        expect($trace->isLatest())->toBeTrue();
+        JournalSync::accept($trace, $this->user);
+        expect(CableItem::count())->toBe(1);
+    });
+
+    it('журнал щита принять нельзя, и страница его не показывает', function () {
+        sendPanel($this, $this->project, 'd15', [need('k', 1)]);
+        $sync = PlanSync::first();
+        $this->actingAs($this->user);
+
+        expect(fn () => JournalSync::accept($sync, $this->user))->toThrow(RuntimeException::class, 'журнала нет');
+        Volt::test('plan-syncs-show', ['planSync' => $sync])
+            ->assertSee('щит d15 — Подвал')
+            ->assertDontSee('Кабельный журнал');
     });
 });

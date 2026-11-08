@@ -29,6 +29,9 @@ class Plan3dController extends Controller
     {
         $data = $request->validate([
             'source_project' => ['required', 'string', 'max:255'],
+            // Часть: «трассы» или «щит <id>». Без поля — трассы, как было до частей.
+            'scope' => ['nullable', 'string', 'max:100', 'regex:/^(трассы|щит \S.*)$/u'],
+            'scope_name' => ['nullable', 'string', 'max:255'],
             'source_name' => ['nullable', 'string', 'max:255'],
             'journal' => ['present', 'array'],
             'journal.*.floor' => ['nullable', 'string', 'max:255'],
@@ -57,12 +60,18 @@ class Plan3dController extends Controller
         ], $data['needs']);
         // Отпечаток — по содержанию, а не по времени: та же модель, нажатая
         // дважды, — одна отправка, а не две одинаковых.
+        $scope = $data['scope'] ?? PlanSync::TRACE_SCOPE;
+        if ($scope !== PlanSync::TRACE_SCOPE && $journal) {
+            return response()->json(['message' => 'Журнал бывает только у части «трассы»'], 422);
+        }
         $fingerprint = hash('sha256', json_encode([$journal, $needs], JSON_UNESCAPED_UNICODE));
 
-        $latest = $project->planSyncs()->latest('id')->first();
+        $latest = $project->planSyncs()->where('scope', $scope)->latest('id')->first();
         $unchanged = $latest && $latest->fingerprint === $fingerprint;
         $sync = $unchanged ? $latest : PlanSync::create([
             'project_id' => $project->id,
+            'scope' => $scope,
+            'scope_name' => $data['scope_name'] ?? null,
             'source_project' => $data['source_project'],
             'source_name' => $data['source_name'] ?? null,
             'fingerprint' => $fingerprint,
@@ -79,6 +88,8 @@ class Plan3dController extends Controller
             'id' => $sync->id,
             'unchanged' => $unchanged,
             'url' => route('plan-syncs.show', $sync),
+            'scope' => $sync->scope,
+            'scope_name' => $sync->scopeLabel(),
             'project' => ['id' => $project->id, 'name' => $project->name],
             'journal' => [
                 'accepted' => $sync->journal_accepted_at !== null,

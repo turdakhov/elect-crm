@@ -23,6 +23,10 @@ new class extends Component {
     #[Computed]
     public function journalDiff(): array
     {
+        if (! $this->planSync->hasJournal()) {
+            return ['added' => [], 'removed' => [], 'changed' => [], 'unchanged' => 0];
+        }
+
         return JournalSync::diffFor($this->planSync);
     }
 
@@ -87,7 +91,7 @@ new class extends Component {
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold">Отправка №{{ $planSync->id }} из 3D-плана</h1>
+                <h1 class="text-2xl font-bold">Отправка №{{ $planSync->id }} из 3D-плана · {{ $planSync->scopeLabel() }}</h1>
                 <p class="text-gray-600 dark:text-gray-400">
                     {{ $planSync->project->name }} · {{ $planSync->created_at->format('d.m.Y H:i') }} ·
                     {{ $planSync->source_name ?: $planSync->source_project }} · модель {{ substr($planSync->fingerprint, 0, 8) }}
@@ -110,7 +114,7 @@ new class extends Component {
         @unless ($this->latest)
             <flux:callout icon="clock" color="amber">
                 <flux:callout.heading>Есть отправка новее</flux:callout.heading>
-                <p>Эта — только для просмотра: принимать журнал и выдавать смету надо по последней.</p>
+                <p>По части «{{ $planSync->scopeLabel() }}» пришла отправка новее. Эта — только для просмотра: принимать журнал и выдавать смету надо по последней.</p>
             </flux:callout>
         @endunless
 
@@ -125,7 +129,8 @@ new class extends Component {
             </flux:callout>
         @endif
 
-        {{-- Журнал --}}
+        {{-- Журнал — только у трасс --}}
+        @if ($planSync->hasJournal())
         <section class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
             @php($diff = $this->journalDiff)
             <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -169,14 +174,16 @@ new class extends Component {
                 @include('partials.cable-journal-diff', ['diff' => $diff])
             @endif
         </section>
+        @endif
 
         {{-- Смета --}}
         <section class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
             <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h2 class="text-lg font-semibold">Смета: разница с уже выданным</h2>
+                    <h2 class="text-lg font-semibold">Смета «{{ $planSync->scopeLabel() }}»: разница с уже выданным</h2>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
                         Выдана будет отдельной сметой и больше не изменится. Минус — потребность уменьшилась.
+                        Считается только по сметам этой части: щиты и трассы не смешиваются.
                     </p>
                 </div>
                 @if (! $this->blockers)

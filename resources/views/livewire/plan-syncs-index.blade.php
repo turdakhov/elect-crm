@@ -17,6 +17,12 @@ new class extends Component {
     {
         return $this->project->planSyncs()->with('productSets')->latest('id')->get();
     }
+
+    #[Computed]
+    public function latestIds()
+    {
+        return $this->syncs->groupBy('scope')->map(fn ($group) => $group->max('id'))->values();
+    }
 }; ?>
 
 <div>
@@ -44,6 +50,7 @@ new class extends Component {
                         <tr>
                             <th class="px-4 py-3">№</th>
                             <th class="px-4 py-3">Когда</th>
+                            <th class="px-4 py-3">Часть</th>
                             <th class="px-4 py-3">Откуда</th>
                             <th class="px-4 py-3">Журнал</th>
                             <th class="px-4 py-3">Смета</th>
@@ -52,13 +59,17 @@ new class extends Component {
                     </thead>
                     <tbody>
                         @foreach ($this->syncs as $sync)
-                            @php($isLatest = $loop->first)
+                            {{-- Последняя — своя у каждой части: щит не устаревает от отправки трасс. --}}
+                            @php($isLatest = $this->latestIds->contains($sync->id))
                             <tr wire:key="sync-{{ $sync->id }}" class="border-b border-gray-200 dark:border-gray-700">
                                 <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $sync->id }}</td>
                                 <td class="px-4 py-3">{{ $sync->created_at->format('d.m.Y H:i') }}</td>
+                                <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $sync->scopeLabel() }}</td>
                                 <td class="px-4 py-3">{{ $sync->source_name ?: $sync->source_project }} · {{ substr($sync->fingerprint, 0, 8) }}</td>
                                 <td class="px-4 py-3">
-                                    @if ($sync->journal_accepted_at)
+                                    @if (! $sync->hasJournal())
+                                        <span class="text-gray-400">—</span>
+                                    @elseif ($sync->journal_accepted_at)
                                         <flux:badge size="sm" color="green">принят</flux:badge>
                                     @elseif ($isLatest)
                                         <flux:badge size="sm" color="amber">ждёт</flux:badge>

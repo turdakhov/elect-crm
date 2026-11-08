@@ -37,11 +37,15 @@ class EstimateSync
         }
     }
 
-    /** Сколько по каждому ключу уже выдано сметами из 3D-плана. */
-    public static function issued(Project $project): array
+    /**
+     * Сколько по каждому ключу уже выдано сметами из 3D-плана — в этой части.
+     * Провод щита и кабель трасс считаются порознь, даже если это один товар.
+     */
+    public static function issued(Project $project, string $scope = PlanSync::TRACE_SCOPE): array
     {
         return ProjectProductSetItem::query()
-            ->whereHas('projectProductSet', fn ($q) => $q->where('project_id', $project->id)->whereNotNull('plan_sync_id'))
+            ->whereHas('projectProductSet', fn ($q) => $q->where('project_id', $project->id)
+                ->whereHas('planSync', fn ($q) => $q->where('scope', $scope)))
             ->where('plan_key', '!=', '')
             ->get(['plan_key', 'quantity'])
             ->groupBy('plan_key')
@@ -56,7 +60,7 @@ class EstimateSync
      */
     public static function delta(PlanSync $sync): array
     {
-        $issued = self::issued($sync->project);
+        $issued = self::issued($sync->project, $sync->scope);
         $needs = [];
         foreach ($sync->needs as $need) {
             $needs[$need['key']] = $need;
@@ -123,10 +127,11 @@ class EstimateSync
             }
 
             $project = $sync->project;
-            $previous = $project->productSets()->whereNotNull('plan_sync_id')->count();
+            $previous = $project->productSets()->whereHas('planSync', fn ($q) => $q->where('scope', $sync->scope))->count();
+            $part = $sync->hasJournal() ? '' : ' — '.$sync->scopeLabel();
             $set = ProjectProductSet::create([
                 'project_id' => $project->id,
-                'name' => $previous === 0 ? 'Смета из 3D-плана' : 'Доп. смета №'.$previous.' из 3D-плана',
+                'name' => ($previous === 0 ? 'Смета из 3D-плана' : 'Доп. смета №'.$previous.' из 3D-плана').$part,
                 'comment' => 'Отправка №'.$sync->id.' от '.$sync->created_at->format('d.m.Y H:i')
                     .', модель '.substr($sync->fingerprint, 0, 8).'. Выдал '.$user->name.'.',
                 'plan_sync_id' => $sync->id,

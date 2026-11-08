@@ -217,6 +217,9 @@ class JournalSync
      */
     public static function accept(PlanSync $sync, User $user): CableJournalVersion
     {
+        if (! $sync->hasJournal()) {
+            throw new RuntimeException('У отправки щита журнала нет.');
+        }
         if (! $sync->isLatest()) {
             throw new RuntimeException('Есть отправка новее — принимать надо её.');
         }
