@@ -61,8 +61,10 @@ class ProjectProductSet extends Model
     /**
      * Строки по разделам — для страницы сметы и для PDF, чтобы итоги в них
      * не разошлись. Строки 3D-плана идут в порядке, в каком их прислали
-     * (кабель, гофра, … щит), добавленное руками — последним разделом,
-     * свежее сверху, как было до разделов.
+     * (кабель, гофра, … щит). Добавленное руками встаёт в раздел, где его
+     * товар привязан к ключам 3D-плана: щит, вписанный вместо присланного,
+     * должен лежать в «щит: корпус», а не в конце. Товар без ключей — в
+     * последний раздел «Товары», свежее сверху, как было до разделов.
      *
      * @return Collection<int, array{title: string, items: Collection<int, ProjectProductSetItem>, total: float}>
      */
@@ -70,9 +72,17 @@ class ProjectProductSet extends Model
     {
         $items = $this->items()->with('product.file')->orderBy('id')->get();
 
+        // Товар привязан к ключам разных разделов — берём тот, где ключей больше.
+        // Ключа у ручной строки нет: в базе там и NULL, и пустая строка.
+        $manual = $items->filter(fn (ProjectProductSetItem $i) => $i->section() === null);
+        $byProduct = PlanKey::whereIn('product_id', $manual->pluck('product_id')->filter()->unique())
+            ->orderBy('id')->get()->groupBy('product_id')
+            ->map(fn (Collection $keys) => $keys->map(fn (PlanKey $k) => explode('|', $k->key, 2)[0])->countBy()->sortDesc()->keys()->first());
+        $sectionOf = fn (ProjectProductSetItem $i) => $i->section() ?? ($i->product_id ? $byProduct->get($i->product_id) : null);
+
         return $items
-            ->sortBy(fn (ProjectProductSetItem $i) => $i->section() === null ? [1, -$i->id] : [0, $i->id])
-            ->groupBy(fn (ProjectProductSetItem $i) => $i->section() ?? '')
+            ->sortBy(fn (ProjectProductSetItem $i) => $sectionOf($i) === null ? [1, -$i->id] : [0, $i->id])
+            ->groupBy(fn (ProjectProductSetItem $i) => $sectionOf($i) ?? '')
             ->map(fn (Collection $group, string $section) => [
                 'title' => $section === '' ? 'Товары' : Str::ucfirst($section),
                 'items' => $group->values(),

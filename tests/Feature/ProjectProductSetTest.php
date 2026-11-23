@@ -131,6 +131,14 @@ describe('Товары в смете', function () {
             ->and(round($sections->sum('total'), 2))->toBe(83200.5)
             ->and(ProjectProductSet::unpriced($sections))->toBe(1);
 
+        // Щит, вписанный руками, встаёт в раздел, где его товар привязан к ключам 3D-плана.
+        $box = Product::factory()->create(['name' => 'Щит 108 модулей', 'approximate_price' => 200000]);
+        \App\Models\PlanKey::create(['key' => 'щит: корпус|Щит 6×18 модулей', 'name' => 'Щит 6×18', 'unit' => 'шт', 'product_id' => $box->id]);
+        $set->items()->create(['product_id' => $box->id, 'quantity' => 1]);
+        expect($set->sections()->pluck('title')->all())->toBe(['Кабель', 'Прибор', 'Щит: корпус', 'Товары']);
+        $box->delete();
+        $set->items()->where('product_id', $box->id)->delete();
+
         $this->actingAs($this->user)
             ->get(route('project-product-set.items.index', $set))
             ->assertSuccessful()
