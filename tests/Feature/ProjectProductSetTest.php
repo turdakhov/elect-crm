@@ -113,6 +113,32 @@ describe('Товары в смете', function () {
         $this->productSet = ProjectProductSet::factory()->create(['project_id' => $this->project->id]);
     });
 
+    test('смета считает суммы по ценам справочника, строки без товара в итог не входят', function () {
+        $cable = Product::factory()->create(['name' => 'ВВГ 3х2,5', 'unit' => 'м', 'approximate_price' => 817]);
+        $socket = Product::factory()->create(['name' => 'Розетка', 'unit' => 'шт', 'approximate_price' => 1500.5]);
+        $set = $this->productSet;
+        $set->items()->create(['product_id' => $cable->id, 'plan_key' => 'кабель|ВВГнг 3×2.5', 'quantity' => 100]);
+        $set->items()->create(['product_id' => null, 'plan_key' => 'кабель|UTP cat.5e', 'quantity' => 50]);
+        $set->items()->create(['product_id' => $socket->id, 'plan_key' => 'прибор|socket', 'quantity' => 2]);
+        $set->items()->create(['product_id' => $socket->id, 'quantity' => -1, 'comment' => 'вернули']);
+
+        $sections = $set->sections();
+
+        expect($sections->pluck('title')->all())->toBe(['Кабель', 'Прибор', 'Товары'])
+            ->and($sections[0]['total'])->toBe(81700.0)
+            ->and($sections[1]['total'])->toBe(3001.0)
+            ->and($sections[2]['total'])->toBe(-1500.5)
+            ->and(round($sections->sum('total'), 2))->toBe(83200.5)
+            ->and(ProjectProductSet::unpriced($sections))->toBe(1);
+
+        $this->actingAs($this->user)
+            ->get(route('project-product-set.items.index', $set))
+            ->assertSuccessful()
+            ->assertSee('83 200,50 ₸')
+            ->assertSee('81 700 ₸')
+            ->assertSee('нет цены');
+    });
+
     test('пользователь может просматривать товары в смете', function () {
         $this->actingAs($this->user)
             ->get(route('project-product-set.items.index', $this->productSet))

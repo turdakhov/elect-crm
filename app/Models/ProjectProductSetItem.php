@@ -35,4 +35,31 @@ class ProjectProductSetItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Цена берётся из справочника на сегодня, в строке её нет: смета — это
+     * прикидка закупа, и подорожавший товар должен подорожать и в ней.
+     * Без товара цены нет — такая строка в итог не входит.
+     */
+    public function unitPrice(): ?float
+    {
+        return $this->product ? (float) $this->product->approximate_price : null;
+    }
+
+    public function amount(): ?float
+    {
+        $price = $this->unitPrice();
+
+        return $price === null ? null : round($this->quantity * $price, 2);
+    }
+
+    /** Раздел 3D-плана — то, что в ключе до «|»: «кабель», «щит: аппараты». */
+    public function section(): ?string
+    {
+        if (! $this->plan_key || ! str_contains($this->plan_key, '|')) {
+            return null;
+        }
+
+        return explode('|', $this->plan_key, 2)[0];
+    }
 }

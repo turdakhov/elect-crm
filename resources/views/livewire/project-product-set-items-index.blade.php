@@ -9,8 +9,13 @@ new class extends Component {
 
     public function with(): array
     {
+        $sections = $this->projectProductSet->sections();
+
         return [
-            'items' => $this->projectProductSet->items()->with('product.file')->latest()->get(),
+            'sections' => $sections,
+            'items' => $sections->flatMap(fn ($s) => $s['items']),
+            'total' => round($sections->sum('total'), 2),
+            'unpriced' => ProjectProductSet::unpriced($sections),
         ];
     }
 
@@ -27,29 +32,27 @@ new class extends Component {
 
     public function exportPdf()
     {
-        $items = $this->projectProductSet->items()->with('product.file')->latest()->get()->map(function ($item) {
+        $sections = $this->projectProductSet->sections();
+        foreach ($sections->flatMap(fn ($s) => $s['items']) as $item) {
             if (!$item->product) {
-                return $item;
+                continue;
             }
-
+            $item->product->imageBase64 = null;
             if ($item->product->file && $item->product->file->path) {
                 $filePath = storage_path('app/public/' . $item->product->file->path);
                 if (file_exists($filePath)) {
                     $imageData = base64_encode(file_get_contents($filePath));
                     $mimeType = mime_content_type($filePath);
                     $item->product->imageBase64 = "data:$mimeType;base64,$imageData";
-                } else {
-                    $item->product->imageBase64 = null;
                 }
-            } else {
-                $item->product->imageBase64 = null;
             }
-            return $item;
-        });
+        }
 
         $pdf = \PDF::loadView('pdfs.project-product-set', [
             'productSet' => $this->projectProductSet,
-            'items' => $items,
+            'sections' => $sections,
+            'total' => round($sections->sum('total'), 2),
+            'unpriced' => ProjectProductSet::unpriced($sections),
         ])
             ->setOption('isRemoteEnabled', true)
             ->setOption('chroot', public_path())
@@ -108,62 +111,115 @@ new class extends Component {
         </flux:callout>
         @endif
 
+        @php
+            $qty = fn ($v) => rtrim(rtrim(number_format($v, 2, ',', ' '), '0'), ',');
+            $money = fn ($v) => number_format($v, fmod((float) $v, 1) == 0.0 ? 0 : 2, ',', ' ') . ' ₸';
+            $n = 0;
+        @endphp
         @if ($items->count() > 0)
-        <div class="rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+        <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-xl border border-neutral-200 bg-white px-5 py-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <div class="text-xs uppercase tracking-wide text-zinc-500">Итого по смете</div>
+                <div class="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-white">{{ $money($total) }}</div>
+            </div>
+            <div class="rounded-xl border border-neutral-200 bg-white px-5 py-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <div class="text-xs uppercase tracking-wide text-zinc-500">Позиций</div>
+                <div class="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-white">{{ $items->count() }} <span class="text-sm font-normal text-zinc-500">в разделах: {{ $sections->count() }}</span></div>
+            </div>
+            <div @class(['rounded-xl border px-5 py-4', 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/40' => $unpriced, 'border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900' => ! $unpriced])>
+                <div class="text-xs uppercase tracking-wide text-zinc-500">Без цены</div>
+                <div @class(['mt-1 text-2xl font-semibold tabular-nums', 'text-amber-700 dark:text-amber-400' => $unpriced, 'text-zinc-900 dark:text-white' => ! $unpriced])>{{ $unpriced }}
+                    <span class="text-sm font-normal text-zinc-500">{{ $unpriced ? 'в итог не вошли' : 'все строки посчитаны' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
             <div class="relative overflow-x-auto">
-                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <table class="w-full text-sm text-zinc-700 dark:text-zinc-300">
+                    <thead class="border-b border-neutral-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:border-neutral-700 dark:bg-zinc-800/60">
                         <tr>
-                            <th scope="col" class="px-6 py-3">Товар</th>
-                            <th scope="col" class="px-6 py-3 text-center">Фото</th>
-                            <th scope="col" class="px-6 py-3">Количество</th>
-                            <th scope="col" class="px-6 py-3">Комментарий</th>
-                            <th scope="col" class="px-6 py-3 justify-end flex">Управление</th>
+                            <th scope="col" class="w-10 px-3 py-3 text-right">№</th>
+                            <th scope="col" class="w-14 px-2 py-3"></th>
+                            <th scope="col" class="px-3 py-3 text-left">Товар</th>
+                            <th scope="col" class="px-3 py-3 text-right whitespace-nowrap">Кол-во</th>
+                            <th scope="col" class="px-3 py-3 text-right whitespace-nowrap">Цена</th>
+                            <th scope="col" class="px-3 py-3 text-right whitespace-nowrap">Сумма</th>
+                            <th scope="col" class="w-20 px-3 py-3"></th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach ($items as $item)
-                        <tr wire:key='{{ $item->id }}'
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                @if ($item->product)
-                                {{ $item->product->name }}
-                                @else
-                                <span class="text-amber-600">без товара</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-center">
+                    @foreach ($sections as $section)
+                    <tbody wire:key="section-{{ $loop->index }}">
+                        @if ($sections->count() > 1)
+                        <tr class="border-b border-neutral-200 bg-zinc-100/70 dark:border-neutral-700 dark:bg-zinc-800">
+                            <th colspan="5" scope="colgroup" class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
+                                {{ $section['title'] }} <span class="ml-1 font-normal normal-case text-zinc-400">· {{ $section['items']->count() }}</span>
+                            </th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold tabular-nums whitespace-nowrap text-zinc-600 dark:text-zinc-300">{{ $money($section['total']) }}</th>
+                            <th></th>
+                        </tr>
+                        @endif
+                        @foreach ($section['items'] as $item)
+                        @php $n++; $price = $item->unitPrice(); $amount = $item->amount(); @endphp
+                        <tr wire:key="item-{{ $item->id }}" class="border-b border-neutral-100 last:border-b-0 hover:bg-zinc-50 dark:border-neutral-800 dark:hover:bg-zinc-800/50">
+                            <td class="px-3 py-2 text-right text-xs tabular-nums text-zinc-400">{{ $n }}</td>
+                            <td class="px-2 py-2">
                                 @if ($item->product && $item->product->file && $item->product->file->path)
-                                <button
-                                    type="button"
-                                    @click="selectedImage = '{{ Storage::url($item->product->file->path) }}'; selectedName = '{{ $item->product->name }}'"
-                                    class="cursor-pointer hover:opacity-75 transition-opacity">
-                                    <img src="{{ Storage::url($item->product->file->path) }}"
-                                        alt="{{ $item->product->name }}"
-                                        style="max-width: 100px; max-height: 100px; width: auto; height: auto; object-fit: contain;">
+                                <button type="button"
+                                    @click="selectedImage = @js(Storage::url($item->product->file->path)); selectedName = @js($item->product->name)"
+                                    class="block size-10 cursor-pointer overflow-hidden rounded-md border border-neutral-200 bg-white transition hover:opacity-75 dark:border-neutral-700">
+                                    <img src="{{ Storage::url($item->product->file->path) }}" alt="{{ $item->product->name }}" class="size-full object-contain">
                                 </button>
                                 @else
-                                <span class="text-gray-400">Нет фото</span>
+                                <div class="size-10 rounded-md border border-dashed border-neutral-200 dark:border-neutral-700"></div>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
-                                <span @class(['text-red-600' => $item->quantity < 0])>{{ rtrim(rtrim(number_format($item->quantity, 2, ',', ' '), '0'), ',') }} {{ $item->product?->unit ?? '' }}</span>
+                            <td class="px-3 py-2">
+                                @if ($item->product)
+                                <div class="font-medium text-zinc-900 dark:text-white">{{ $item->product->name }}</div>
+                                @else
+                                <div class="font-medium text-amber-600">без товара</div>
+                                @endif
+                                @if ($item->comment)
+                                <div class="text-xs text-zinc-500">{{ $item->comment }}</div>
+                                @endif
                             </td>
-                            <td class="px-6 py-4 text-gray-700 dark:text-gray-200">
-                                {{ $item->comment ?? '—' }}
+                            <td @class(['px-3 py-2 text-right tabular-nums whitespace-nowrap', 'text-red-600' => $item->quantity < 0])>
+                                {{ $qty($item->quantity) }} {{ $item->product?->unit ?? "" }}
                             </td>
-                            <td class="px-6 py-4 flex gap-2 justify-end">
-                                <flux:button size="xs" color="blue" icon="pencil" :href="route('project-product-set-items.edit', $item)">
-                                    Редактировать
-                                </flux:button>
-                                <flux:button size="xs" color="rose" icon="trash" wire:click="deleteItem({{ $item->id }})"
-                                    onclick="return confirm('Удалить товар из сметы?')">
-                                    Удалить
-                                </flux:button>
+                            <td class="px-3 py-2 text-right tabular-nums whitespace-nowrap text-zinc-500">
+                                {{ $price ? $money($price) : '—' }}
+                            </td>
+                            <td @class(['px-3 py-2 text-right font-medium tabular-nums whitespace-nowrap', 'text-red-600' => ($amount ?? 0) < 0, 'text-zinc-900 dark:text-white' => ($amount ?? 0) >= 0])>
+                                @if ($price)
+                                {{ $money($amount) }}
+                                @else
+                                <span class="text-xs font-normal text-amber-600">нет цены</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-2">
+                                <div class="flex justify-end gap-1">
+                                    <flux:button size="xs" variant="ghost" icon="pencil" :href="route('project-product-set-items.edit', $item)" title="Редактировать" />
+                                    <flux:button size="xs" variant="ghost" icon="trash" wire:click="deleteItem({{ $item->id }})"
+                                        onclick="return confirm('Удалить товар из сметы?')" title="Удалить" />
+                                </div>
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
+                    @endforeach
+                    <tfoot class="border-t-2 border-neutral-200 bg-zinc-50 dark:border-neutral-700 dark:bg-zinc-800/60">
+                        <tr>
+                            <td colspan="5" class="px-3 py-3 text-right font-semibold text-zinc-900 dark:text-white">
+                                Итого
+                                @if ($unpriced)
+                                <span class="ml-2 text-xs font-normal text-amber-600">строки без цены не вошли: {{ $unpriced }}</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3 text-right text-base font-semibold tabular-nums whitespace-nowrap text-zinc-900 dark:text-white">{{ $money($total) }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

@@ -15,7 +15,7 @@ new class extends Component {
     #[Computed]
     public function productSets()
     {
-        return $this->project->productSets()->orderBy('created_at', 'desc')->get();
+        return $this->project->productSets()->with('items.product')->orderBy('created_at', 'desc')->get();
     }
 
     public function deleteSet($id)
@@ -68,6 +68,9 @@ new class extends Component {
                         <flux:button size="sm" color="blue" icon="shopping-bag" :href="route('project-product-set.items.index', $set)">
                             Товары ({{ $set->items->count() }})
                         </flux:button>
+                        <span class="ml-2 text-sm font-semibold tabular-nums text-zinc-700 dark:text-zinc-200">
+                            {{ number_format($set->items->sum(fn ($i) => $i->amount() ?? 0), 0, ',', ' ') }} ₸
+                        </span>
                         <flux:button size="sm" variant="danger" icon="trash" wire:click="deleteSet({{ $set->id }})"
                             onclick="return confirm('Вы уверены? Это удалит всю смету.')">
                             Удалить
