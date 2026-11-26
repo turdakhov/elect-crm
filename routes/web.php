@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CableItemsExportController;
+use App\Http\Controllers\EstimateXlsxController;
 use App\Livewire\ComplexesCreate;
 use App\Livewire\ComplexesIndex;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Volt::route('projects/{project}/product-set/create', 'project-product-set-create')->name('projects.product-set.create');
     Volt::route('project-product-set/{projectProductSet}/edit', 'project-product-set-edit')->name('project-product-set.edit');
     Volt::route('project-product-set/{projectProductSet}/items', 'project-product-set-items-index')->name('project-product-set.items.index');
+    Route::get('project-product-set/{projectProductSet}/export-xlsx', EstimateXlsxController::class)->name('project-product-set.export-xlsx');
     Volt::route('project-product-set/{projectProductSet}/items/create', 'project-product-set-items-create')->name('project-product-set.items.create');
     Volt::route('project-product-set-items/{projectProductSetItem}/edit', 'project-product-set-items-edit')->name('project-product-set-items.edit');
     // Purchases nested under projects

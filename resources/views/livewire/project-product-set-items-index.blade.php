@@ -91,6 +91,9 @@ new class extends Component {
                 <flux:button color="emerald" icon="document-text" wire:click="exportPdf">
                     Скачать PDF
                 </flux:button>
+                <flux:button color="lime" icon="table-cells" :href="route('project-product-set.export-xlsx', $projectProductSet)">
+                    Скачать Excel
+                </flux:button>
             </div>
         </div>
 

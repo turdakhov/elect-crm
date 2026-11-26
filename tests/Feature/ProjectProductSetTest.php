@@ -335,3 +335,29 @@ function validate(array $data, array $rules): array
 
     return $validator->errors()->toArray();
 }
+
+describe('Смета в Excel', function () {
+    test('выгрузка: разделы, суммы формулами, строка без цены вне итога', function () {
+        $set = ProjectProductSet::factory()->create(['project_id' => $this->project->id, 'name' => 'Трассы']);
+        $cable = Product::factory()->create(['name' => 'Кабель ВВГнг 3×2,5', 'approximate_price' => 800, 'unit' => 'м']);
+        $box = Product::factory()->create(['name' => 'Подрозетник', 'approximate_price' => 150]);
+        $free = Product::factory()->create(['name' => 'Без цены', 'approximate_price' => 0]);
+        ProjectProductSetItem::create(['project_product_set_id' => $set->id, 'product_id' => $cable->id, 'quantity' => 100, 'plan_key' => 'кабель|ВВГнг 3×2.5']);
+        ProjectProductSetItem::create(['project_product_set_id' => $set->id, 'product_id' => $box->id, 'quantity' => 10, 'plan_key' => 'подрозетники|стена']);
+        ProjectProductSetItem::create(['project_product_set_id' => $set->id, 'product_id' => $free->id, 'quantity' => 3, 'plan_key' => 'подрозетники|коробка']);
+
+        $response = $this->actingAs($this->user)->get(route('project-product-set.export-xlsx', $set));
+        $response->assertSuccessful();
+        expect($response->headers->get('content-disposition'))->toContain('.xlsx');
+
+        $path = $response->baseResponse->getFile()->getPathname();
+        $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path)->getActiveSheet();
+        $cells = collect($sheet->toArray(null, true, false))->flatten()->filter()->values();
+        expect($cells)->toContain('Кабель ВВГнг 3×2,5')->toContain('Подрозетник');
+        // Итог — формула: 100 × 800 + 10 × 150, строка без цены — ноль.
+        $total = collect($sheet->getRowIterator())->map(fn ($r) => $r->getRowIndex())
+            ->first(fn ($i) => $sheet->getCell("A$i")->getValue() === 'Итого');
+        expect($sheet->getCell("G$total")->getCalculatedValue())->toEqual(81500);
+        expect((string) $sheet->getCell("G$total")->getValue())->toStartWith('=');
+    });
+});
