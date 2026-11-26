@@ -29,7 +29,10 @@ class EstimateXlsx
 
     private const MONEY = '#,##0 "₸";[Red]-#,##0 "₸"';
 
-    private const QTY = '#,##0.##;[Red]-#,##0.##';
+    /** Целое — без запятой: «8», а не «8,» (формат «0.##» оставляет разделитель). */
+    private const QTY_INT = '#,##0;[Red]-#,##0';
+
+    private const QTY = '#,##0.0##;[Red]-#,##0.0##';
 
     public function build(ProjectProductSet $set): Spreadsheet
     {
@@ -40,7 +43,7 @@ class EstimateXlsx
         $sheet->setTitle(mb_substr(preg_replace('/[\\\\\/?*\[\]:]/u', ' ', $set->name) ?: 'Смета', 0, 31));
 
         // № · фото · товар · ед. · кол-во · цена · сумма · ссылка
-        foreach (['A' => 5, 'B' => 11, 'C' => 58, 'D' => 9, 'E' => 10, 'F' => 13, 'G' => 15, 'H' => 30] as $col => $w) {
+        foreach (['A' => 5, 'B' => 11, 'C' => 54, 'D' => 13, 'E' => 10, 'F' => 13, 'G' => 15, 'H' => 30] as $col => $w) {
             $sheet->getColumnDimension($col)->setWidth($w);
         }
 
@@ -51,7 +54,10 @@ class EstimateXlsx
         $sheet->getStyle('A2')->getFont()->getColor()->setRGB('6B7280');
         if ($set->comment) {
             $sheet->setCellValue('A3', $set->comment);
+            $sheet->mergeCells('A3:H3');
             $sheet->getStyle('A3')->getFont()->setItalic(true);
+            $sheet->getStyle('A3')->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+            $sheet->getRowDimension(3)->setRowHeight(13 * (1 + intdiv(mb_strlen($set->comment), 140)) + 4);
         }
 
         $row = 5;
@@ -148,7 +154,9 @@ class EstimateXlsx
             $sheet->getStyle("H$row")->getFont()->setUnderline(true)->getColor()->setRGB('2563EB');
         }
 
-        $sheet->getStyle("E$row")->getNumberFormat()->setFormatCode(self::QTY);
+        $whole = fmod((float) $item->quantity, 1.0) == 0.0;
+        $sheet->getStyle("E$row")->getNumberFormat()->setFormatCode($whole ? self::QTY_INT : self::QTY);
+        $sheet->getStyle("D$row")->getAlignment()->setWrapText(true);
         $sheet->getStyle("F$row:G$row")->getNumberFormat()->setFormatCode(self::MONEY);
         $sheet->getStyle("A$row:H$row")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle("C$row")->getAlignment()->setWrapText(true);
